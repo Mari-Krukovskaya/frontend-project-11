@@ -7,11 +7,23 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mari-Krukovskaya/frontend-project-11.git"
+  },
   "author": "Maria",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mari-Krukovskaya/frontend-project-11/issues"
+  },
+  "homepage": "https://github.com/Mari-Krukovskaya/frontend-project-11#readme",
   "devDependencies": {
     "eslint": "^8.46.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.28.0"
+    "eslint-plugin-import": "^2.28.0",
+    "eslint-plugin-jest": "^27.2.3"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
   }
 }
