@@ -1,8 +1,9 @@
 {
-  "name": "frontend-project-11",
+  "name": "@hexlet/code",
   "version": "1.0.0",
-  "description": "[![Actions Status](https://github.com/Mari-Krukovskaya/frontend-project-11/workflows/hexlet-check/badge.svg)](https://github.com/Mari-Krukovskaya/frontend-project-11/actions)",
-  "main": "index.js",
+  "description": "RSS agregator",
+  "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
