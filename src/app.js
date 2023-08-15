@@ -33,8 +33,8 @@ export default () => {
           modalWindow: document.querySelector('.modal'),
           title: document.querySelector('.modal-title'),
           body: document.querySelector('.modal-body'),
-          button: document.querySelector('.full-article')
-        }
+          button: document.querySelector('.full-article'),
+        },
     };
     const state = {
       form: {
@@ -55,7 +55,7 @@ export default () => {
         error: null,
       },
       };
-const watchState = render(state, elements, i18nInstance)      
+const watchedState = render(state, elements, i18nInstance)      
 
 elements.form.addEventListener('submit', (even) => {
 even.preventDefault();
