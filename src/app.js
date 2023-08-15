@@ -50,12 +50,12 @@ export default () => {
         visitedPostsId: new Set(),
       },
 
-      displayLoadingFeedback: {
+      LoadingFeedback: {
         formStatus: 'filling',
         error: null,
       },
       };
-      
+const watchState = render(state, elements, i18nInstance)      
 
 elements.form.addEventListener('submit', (even) => {
 even.preventDefault();
