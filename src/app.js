@@ -7,7 +7,8 @@ import parseFeedData from './parser.js';
 import render from './view.js'
 import resources from './locales/index.js';
 
-
+const timeInterval = 5000;
+const timeOut = 1000;
 
 const validation = (url, listUrls) => {
   const schema = yup.string().url().required().notOneOf(listUrls);
@@ -18,6 +19,7 @@ const fetchRemoteContent = (url) => {
   axios({
     method: 'get',
     url: `https://allorigins.hexlet.app/get?disableCache=true&url=${url}`,
+   time: timeOut,
   })
   .then((responce) => resolve(responce))
   .catch((error) => reject(error));
@@ -34,18 +36,24 @@ const addPostsTostate = (state, newPostsData, feedidentifer) => {
 };
 
 const checkNewPosts = (state) => {
-  const fetchPromises = state.feeds.map(({ link, feedId }) => {
+  const fetchPromises = state.feeds
+  .map(({ link, feedId }) => {
     fetchRemoteContent(link)
     .then((responce) => {
       const { posts } = parseFeedData(responce.data.contents);
       const existingPostLinks = state.posts.map((post) => post.link);
       const newPosts = posts.filter((post) => !existingPostLinks.includes(post.link));
       if (newPosts.length > 0) {
-        return addPostsTostate(state, newPosts, feedId);
+    addPostsTostate(state, newPosts, feedId);
       }
+    return Promise.resolve();
     })
+    return Promise.all(fetchPromises)
+    .finally(() => {
+      setTimeout(() => checkNewPosts(state), timeInterval)
+    });
 });
- return Promise.all(fetchPromises)
+
 };
 
 
