@@ -1,211 +1,368 @@
-import onChange from "on-change";
 
-const renderForm = (value, elements, i18nInstance) => {
-    const { isFeedValid, error } = value;
-    const { input, feedback } = elements;
-  
-    input.classList.toggle('is-invalid', !isFeedValid);
-    feedback.classList.toggle('text-success', isFeedValid);
-    feedback.classList.toggle('text-danger', !isFeedValid);
-    feedback.textContent = !isFeedValid ? i18nInstance.t(`error.${error}`) : '';
-  };
 
-const renderLoadingFeedback = (value, elements, i18nInstance) => {
-  const  { formStatus, error } = value;
-  const  { form, input, submit, feedback } = elements;
+// const renderForm = (value, elements, i18nInstance) => {
+//   const { isFeedValid, error } = value;
+//   const { input, feedback } = elements;
 
-  input.removeAttribute('readonly');
-  submit.removeAttribute('disabled');
-  input.classList.remove('is-invalid');
-  feedback.classList.remove('text-danger');
-  feedback.classList.remove('text-success');
+//   input.classList.toggle('is-invalid', isFeedValid === false);
+//   feedback.classList.toggle('text-success', isFeedValid !== false);
+//   feedback.classList.toggle('text-danger', isFeedValid === false);
+//   feedback.textContent = isFeedValid === false ? i18nInstance.t(`error.${error}`) : '';
+// };
 
-  switch (formStatus) {
-    case 'loading':
-      input.setAttribute('readonly', 'readonly');
-      submit.setAttribute('disabled', 'disabled');
-      input.classList.remove('is-invalid');
-      feedback.classList.remove('text-danger');
-      feedback.classList.remove('text-success');
-      feedback.textContent = i18nInstance.t('loading');
-      break;
 
-    case 'success':
-      input.removeAttribute('readonly');
-      submit.removeAttribute('disabled');
-      feedback.classList.remove('text-danger');
-      feedback.classList.add('text-success');
-      feedback.textContent = i18nInstance.t('success');
-      form.reset();
-      input.focus();
-      break;
+// const renderForm = (value, elements, i18nInstance) => {
+//   const { isFeedValid, error } = value;
+//   const { input, feedback } = elements;
 
-    case 'failed':
-      input.removeAttribute('readonly');
-      submit.removeAttribute('disabled');
-      input.classList.add('is-invalid');
-      feedback.classList.remove('text-success');
-      feedback.classList.add('text-danger');
-      feedback.textContent = i18nInstance.t(`error.${error}`);
-      break;
+//   input.classList.add('is-invalid', !isFeedValid);
+//   feedback.classList.remove('text-success', isFeedValid);
+//   feedback.classList.add('text-danger', !isFeedValid);
+//   feedback.textContent = !isFeedValid ? i18nInstance.t(`error.${error}`) : '';
+// };
 
-    default:
-      break;
-  }
-};
-const renderPosts = (state, div, i18nInstance) => {
-  const ul = createList();
-  state.posts.forEach((post) => {
-  const li = createListItem(post, state.postViewState.visitedPostsId, i18nInstance);
-  ul.appendChild(li);
+
+
+
+// const renderLoadingFeedback = (value, elements, i18nInstance) => {
+//   const { formStatus, error } = value;
+//   const { form, input, submitBtn, feedback } = elements;
+
+// input.readonly = formStatus === 'loading';
+// submitBtn.disabled = formStatus === 'loading';
+
+// input.classList.toggle('is-invalid', formStatus === 'failed');
+// feedback.classList.toggle('text-danger', formStatus === 'failed');
+// feedback.classList.toggle('text-success', formStatus === 'success');
+
+
+//   switch (formStatus) {
+//     case 'loading':
+//       feedback.textContent = i18nInstance.t('loading');
+//       break;
+
+//     case 'success':
+//       feedback.textContent = i18nInstance.t('success');
+//       form.reset();
+//       input.focus();
+//       break;
+
+//     case 'failed':
+//       feedback.textContent = i18nInstance.t(`error.${error}`);
+//       break;
+
+//     default:
+//       break;
+//   }
+// };
+
+
+const renderPosts = (watchedState, element, i18nInstance) => {
+  const listGroup = document.createElement('ul');
+  listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  watchedState.posts.forEach((post) => {
+    const listItem = document.createElement('li');
+    listGroup.classList.add(
+      'list-group-item',
+      'd-flex',
+      'justify-content-between',
+      'align-items-start',
+      'border-0',
+      'border-end-0');
+    const { title, id, link } = post;
+
+    const a = document.createElement('a');
+    a.setAttribute('href', link);
+    a.setAttribute('data-id', post.id);
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+    a.textContent = title;
+    a.classList.add(watchedState.postViewState.visitedPostsId.has(id) ?
+      'fw-normal' : 'fw-bold');
+
+    const btn = document.createElement('button');
+    btn.setAttribute('type', 'button');
+    btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    btn.setAttribute('data-id', id);
+    btn.setAttribute('target', '_blank');
+    btn.setAttribute('data-bs-toggle', 'modal');
+    btn.setAttribute('data-bs-target', '#modal');
+    btn.textContent = i18nInstance.t('button');
+
+    listItem.append(a, btn);
+    listGroup.append(listItem);
   });
-
-div.appendChild(ul);
-
-};
-const createList = () => {
-  const ul = document.createElement('ul');
-  ul.classList.add('list-group', 'border-0', 'rounded-0');
-  return ul;
-};
-
-const createListItem = (post, visitedPostsId, i18nInstance) => {
-  const { title, link, id } = post;
-
-  const li = document.createElement('li');  
- li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-
-  const a = createLink( post, visitedPostsId);
-  const button = createButton(id, i18nInstance);
-
-  li.append(a, button);
-
-  return li;
-};
-const createLink = (post, visitedPostsId) => {
-  const { title, link, id } = post;
-  
-  const a = document.createElement('a');
-  a.classList.add(visitedPostsId.includes(id) ? 'fw-normal' : 'fw-bold', 'link-secondary');
-  a.setAttribute('href', link);
-  a.setAttribute('data-id', id);
-  a.setAttribute('target', '_blank');
-  a.setAttribute('rel', 'nooper noreferrer');
-  a.textContent = title;
-
-  return a;
-};
-
-const createButton = (id, i18nInstance) => {
-  const button = document.createElement('button');
-  button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-  button.setAttribute('type', 'button');
-  button.setAttribute('data-id', id);
-  button.setAttribute('data-bs-Toggle', 'modal');
-  button.setAttribute('data-bs-Target', '#modal');
-  button.textContent = i18nInstance.t('button');
-
-  return button;
+  element.append(listGroup);
 };
 
 
-const renderFeeds = (state, elements) => {
-  const ul = document.createElement('ul');
-  ul.classList.add('list-group', 'border-0', 'rounded-0');
+// const renderPosts = (watchedState, elements, i18nInstance) => {
+//   const type = 'posts';
+//   const { posts } = elements;
+//   posts.textContent = '';
 
-  state.feeds.forEach((feed) => {
-  const { title, description } = feed;
+//   const { cardBorder, listGroup } = createContainer(i18nInstance, type);
+//   cardBorder.append(listGroup);
+// posts.append(cardBorder);
 
-  const li = createListitem();
-  const h3 = createHeading(title);
-  const p = createParagraph(description);
+//   watchedState.posts.forEach((post) => {
+//     const {id, link, title } = post;
 
- li.append(h3, p);
- ul.append(li);
-});
+//     const listItem = document.createElement('li');
+//     listItem.classList.add(
+//       'list-group-item',
+//        'd-flex',
+//         'justify-content-between',
+//          'align-items-start',
+//           'border-0',
+//            'border-end-0'
+//            );
 
-elements.append(ul);
+//     const linkElement = document.createElement('a');
+//     linkElement.setAttribute('href', link);
+//     linkElement.setAttribute('data-id', id);
+//     linkElement.setAttribute('target', '_blank');
+//     linkElement.setAttribute('rel', 'noopener noreferrer');
+//     linkElement.textContent = title;
+//           linkElement.classList.add(watchedState.postViewState.visitedPostsId.has(id) ? 
+//    'fw-normal' : 'fw-bold');
+
+//     const button = document.createElement('button');
+//     button.setAttribute('type', 'button');
+//     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+//     button.setAttribute('data-id',id);
+//     button.setAttribute('target', '_blank');
+//     button.setAttribute('data-bs-toggle', 'modal');
+//     button.setAttribute('data-bs-target', '#modal');
+//     button.textContent = i18nInstance.t('button');
+
+//     listItem.append(linkElement, button);
+//     listGroup.prepend(listItem);
+//   });
+// };
+
+
+const renderFeeds = (watchedState, element) => {
+  const listGroup = document.createElement('ul');
+  listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+  watchedState.feeds.forEach((feed) => {
+    const { title, description } = feed;
+
+    const listItem = document.createElement('li');
+    listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+    const h3Title = document.createElement('h3');
+    h3Title.classList.add('h6', 'm-0');
+    h3Title.textContent = title;
+
+    const p = document.createElement('p');
+    p.classList.add('m-0', 'small', 'text-black-50');
+    p.textContent = description;
+
+    listItem.append(h3Title, p);
+    listGroup.append(listItem);
+  });
+  element.append(listGroup);
 };
 
-const createListitem = () => {
-  const li = document.createElement('li');
-  li.classList.add('list-group-item', 'border-0', 'border-end-0');
-  return li;
-}
 
-const createHeading = (title) => {
-  const h3 = document.createElement('h3');
-  h3.classList.add('h6', 'm-0');
-  h3.textContent = title;
-};
 
-const createParagraph = (description) => {
-  const p = document.createElement('p');
-  p.classList.add('m-0', 'small', 'text-black-50');
-  p.textContent = description;
-  return p;
-};
+// const renderFeeds = (watchedState, elements, i18nInstance) => {
+//   const type = 'feeds';
+//   const { feeds } = elements;
+//   feeds.textContent = '';
+
+//   const { cardBorder, listGroup } = createContainer(i18nInstance, type);
+//   cardBorder.append(listGroup)
+//   feeds.append(cardBorder);
+
+//   watchedState.feeds.forEach((feed) => {
+//     const { title, description } = feed;
+
+//     const listItem = document.createElement('li');
+//     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+//     const titleElement = document.createElement('h3');
+//     titleElement.classList.add('h6', 'm-0');
+//     titleElement.textContent = title;
+//     listItem.prepend(titleElement);
+
+//     const descriptionElement = document.createElement('p');
+//     descriptionElement.classList.add('m-0', 'small', 'text-black-50');
+//     descriptionElement.textContent = description;
+//     listItem.append(descriptionElement);
+
+//     listGroup.prepend(listItem);
+//   });
+
+//   cardBorder.append(listGroup);
+// };
+// const createContainer = (i18nInstance, type) => {
+//   const cardBorder = document.createElement('div');
+//   const cardBody = document.createElement('div');
+//   const cardTitle =  document.createElement('h2');
+//   const listGroup = document.createElement('ul');
+
+//   cardBorder.classList.add('card', 'border-0');
+//   cardBody.classList.add('card-body');
+//   cardTitle.classList.add('card-title', 'h4');
+//   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+//   cardBorder.append(cardBody);
+//   cardBody.append(cardTitle);
+
+//   cardTitle.textContent = i18nInstance.t(type);
+
+//   return { cardBorder, listGroup };
+//  }
+
+
 
 const createContainer = (type, watchedState, elements, i18nInstance) => {
-  const builders = {
-    feeds: renderFeeds,
-    posts: renderPosts,
+
+  const building = {
+    feeds: (element) => renderFeeds(watchedState, element),
+    posts: (element) => renderPosts(watchedState, element, i18nInstance),
   };
+  elements[type].innerHtml = '';
 
-  elements[type].innerHTML = '';
-
-  const cardBorder = document.createElement('div');
-  cardBorder.classList.add('card', 'border-0');
+  const card = document.createElement('div');
+  card.classList.add('card', 'border-0');
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
 
-  const h2 = document.createElement('h2');
-  h2.classList.add('card title', 'h4');
-  h2.textContent = i18nInstance.t(type);
+  const cardTitle = document.createElement('h2');
+  cardTitle.classList.add('card-title', 'h4');
+  cardTitle.textContent = i18nInstance(type);
 
-  cardBody.append(h2);
-  cardBorder.append(cardBody);
-  elements[type].append(cardBorder);
-
-  builders[type](watchedState, cardBorder, i18nInstance);
+  cardBody.append(cardTitle);
+  card.append(cardBody);
+  elements[type](card);
+  building[type](card)
 };
 
-const renderModalWindow = (elements, state, postId) => {
-  const { posts } = state;
-  const currentPostId = posts.find((post) => post.id === postId);
-  const { title, description, link } = currentPostId;
+const renderModalWindow = (watchedState, postId, elements) => {
+  const currentPosts = watchedState.posts.find(({ id }) => id === postId);
+  const { title, description, link } = currentPosts;
 
   elements.modal.title.textContent = title;
   elements.modal.body.textContent = description;
-  elements.modal.button.setAttribute('href', link)
+  elements.modal.linkBtn.setAttribute('href', link);
 };
 
 
-export default (state, elements, i18nInstance) => {
-  const { form, loadingFeedback, feeds, posts, postViewState } = state;
-
-  onChange(state, (path, value) => {
-    switch (path) {
-      case 'form':
-        renderForm(value, elements, i18nInstance);
-        break;
-      case 'loadingFeedback':
-        renderLoadingFeedback(value, elements, i18nInstance);
-        break;
-      case 'feeds':
-        renderFeeds(state, elements, i18nInstance);
-        break;
-      case 'posts': 
-      case 'postViewState.visitedPostsId':
-        renderPosts(state, elements, i18nInstance);
-        break;
-      case 'postViewState.currentPostId':
-        renderModalWindow(state, value);
-        break;
-        default:
-          break;
-    }
-    return state;
-  });
+const successStatus = (elements, i18nInstance) => {
+  const { feedback, input, form } = elements;
+  feedback.classList.add('text-success');
+  feedback.classList.remove('text-danger');
+  input.classList.remove('is-invalid');
+  feedback.textContent = i18nInstance.t('success');
+  form.reset();
+  input.focus();
 };
+
+
+const handleError = (elements, error, i18nInstance) => {
+  const { feedback, input, submitBtn } = elements;
+  feedback.classList.add('text-danger');
+  feedback.classList.remove('text-success');
+  feedback.textContent = i18nInstance.t(`error.${error.replace(/ /g, '')}`);
+
+  input.classList.toggle('is-invalid', error !== 'Connection Error');
+  input.classList.toggle('is-invalid', error === 'Connection Error');
+
+    submitBtn.disabled = false;
+    input.disabled = false;
+};
+
+const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
+  const { submitBtn } = elements;
+  switch (fromStatus) {
+    case 'success':
+    case 'filling':
+       submitBtn.disabled = false;
+      successStatus(elements, i18nInstance);
+      break;
+
+    case 'failed':
+       submitBtn.disabled = false;
+      handleError(elements, watchedState.LoadingFeedback.error, i18nInstance, watchedState);
+      break;
+
+    case 'sending':
+      submitBtn.disabled = true;
+      break;
+
+    default:
+      throw new Error(`Uknown fromstatus: ${fromStatus}`);
+  }
+};
+
+export default (elements, watchedState, i18nInstance) => (path, value) => {
+  console.log('.........c.',value)
+  switch (path) {
+    case 'form.isFeedValid':
+      elements.submitBtn.disabled = true;;
+      break;
+
+    case 'LoadingFeedback.formStatus':
+      activeFromStatus(elements, value, watchedState, i18nInstance);
+      break;
+
+    case 'LoadingFeedback.error':
+      handleError(elements, value, watchedState, i18nInstance);
+      break;
+
+    case 'postViewState.currentPostId':
+      renderModalWindow(watchedState, elements, value);
+      break;
+
+    case 'posts':
+    case 'postViewState.visitedPostsId':
+      createContainer('posts', watchedState, elements, i18nInstance);
+      break;
+
+    case 'feeds':
+      createContainer('feeds', watchedState, elements, i18nInstance);
+      break;
+
+    default:
+      break;
+
+  }
+};
+// export default (state, elements, i18nInstance) => {
+//   onChange(state, (path, value) => {
+
+//     switch (path) {
+//   case 'form':
+//     renderForm(value, elements, i18nInstance);
+//     break;
+
+//       case 'LoadingFeedback':
+//         renderLoadingFeedback(value, elements, i18nInstance);
+//         break;
+
+//         case 'feeds':
+//           renderFeeds(state, elements, i18nInstance);
+//           break;
+
+//           case 'posts':
+//           case 'postViewState.visitedPostsId':
+//             renderPosts(state, elements, i18nInstance);
+//             break;
+
+//           case 'postViewState.currentPostId':
+//             renderModalWindow(state, value);
+//             break;
+
+//       default:
+//         break;
+//     }
+//     return state;
+//   });
+
+// };
