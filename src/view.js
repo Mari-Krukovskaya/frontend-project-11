@@ -1,4 +1,4 @@
-
+import onChange from "on-change";
 
 // const renderForm = (value, elements, i18nInstance) => {
 //   const { isFeedValid, error } = value;
@@ -55,13 +55,47 @@
 //       break;
 //   }
 // };
+// const createContainer = (i18nInstance, type) => {
+//   const cardBorder = document.createElement('div');
+//   const cardBody = document.createElement('div');
+//   const cardTitle =  document.createElement('h2');
+//   const listGroup = document.createElement('ul');
+
+//   cardBorder.classList.add('card', 'border-0');
+//   cardBody.classList.add('card-body');
+//   cardTitle.classList.add('card-title', 'h4');
+//   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+
+//   cardBorder.append(cardBody);
+//   cardBody.append(cardTitle);
+
+//   cardTitle.textContent = i18nInstance.t(type);
+
+//   return { cardBorder, listGroup };
+//  }
+
+const renderPosts = (watchedState, elements, i18nInstance) => {
+  elements.posts.innerHTML = '';
+  const divCard = document.createElement('div');
+  divCard.classList.add('card', 'border-0');
+  elements.posts.prepend(divCard);
+
+  const divBody = document.createElement('div');
+  divBody.classList.add('card-body');
+  divCard.append(divBody);
+
+  const h2Title = document.createElement('h2');
+  h2Title.classList.add('card-title', 'h4');
+  h2Title.textContent = i18nInstance.t('posts.title');
+  divBody.prepend(h2Title);
 
 
-const renderPosts = (watchedState, element, i18nInstance) => {
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
-  watchedState.posts.forEach((post) => {
+  watchedState.posts.forEach(({ id, title, link }) => {
+    const classes = watchedState.postViewState.visitedPostsId.has(id) ? 'fw-normal link-secondary' : 'fw-bold';
+
     const listItem = document.createElement('li');
     listGroup.classList.add(
       'list-group-item',
@@ -70,30 +104,31 @@ const renderPosts = (watchedState, element, i18nInstance) => {
       'align-items-start',
       'border-0',
       'border-end-0');
-    const { title, id, link } = post;
+
 
     const a = document.createElement('a');
+    a.setAttribute('class', classes);
     a.setAttribute('href', link);
-    a.setAttribute('data-id', post.id);
+    a.dataset.id = id;
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = title;
-    a.classList.add(watchedState.postViewState.visitedPostsId.has(id) ?
-      'fw-normal' : 'fw-bold');
+    listItem.append(a)
 
     const btn = document.createElement('button');
     btn.setAttribute('type', 'button');
     btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    btn.setAttribute('data-id', id);
-    btn.setAttribute('target', '_blank');
-    btn.setAttribute('data-bs-toggle', 'modal');
-    btn.setAttribute('data-bs-target', '#modal');
-    btn.textContent = i18nInstance.t('button');
+    btn.dataset.id = id;
 
-    listItem.append(a, btn);
+    btn.setAttribute('target', '_blank');
+    btn.dataset.bsToggle = 'modal';
+    btn.dataset.bsTarget = '#modal';
+    btn.textContent = i18nInstance.t('posts.button');
+    listItem.append(btn);
+
     listGroup.append(listItem);
   });
-  element.append(listGroup);
+  divCard.append(listGroup);
 };
 
 
@@ -143,28 +178,42 @@ const renderPosts = (watchedState, element, i18nInstance) => {
 // };
 
 
-const renderFeeds = (watchedState, element) => {
+const renderFeeds = (watchedState, elements, i18nInstance) => {
+  elements.posts.innerHTML = '';
+  const divCard = document.createElement('div');
+  divCard.classList.add('card', 'border-0');
+  elements.posts.prepend(divCard);
+
+  const divBody = document.createElement('div');
+  divBody.classList.add('card-body');
+  divCard.append(divBody);
+
+  const h2Title = document.createElement('h2');
+  h2Title.classList.add('card-title', 'h4');
+  h2Title.textContent = i18nInstance.t('feeds.title');
+  divBody.prepend(h2Title);
+
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
   watchedState.feeds.forEach((feed) => {
     const { title, description } = feed;
-
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
 
     const h3Title = document.createElement('h3');
     h3Title.classList.add('h6', 'm-0');
     h3Title.textContent = title;
+    listItem.append(h3Title);
 
     const p = document.createElement('p');
     p.classList.add('m-0', 'small', 'text-black-50');
     p.textContent = description;
+    listItem.append(p);
 
-    listItem.append(h3Title, p);
     listGroup.append(listItem);
   });
-  element.append(listGroup);
+  divCard.append(listGroup);
 };
 
 
@@ -199,50 +248,33 @@ const renderFeeds = (watchedState, element) => {
 
 //   cardBorder.append(listGroup);
 // };
-// const createContainer = (i18nInstance, type) => {
-//   const cardBorder = document.createElement('div');
+
+
+
+
+// const createContainer = (type, watchedState, elements, i18nInstance) => {
+
+//   const building = {
+//     feeds: (element) => renderFeeds(watchedState, element),
+//     posts: (element) => renderPosts(watchedState, element, i18nInstance),
+//   };
+//   elements[type].innerHtml = '';
+
+//   const card = document.createElement('div');
+//   card.classList.add('card', 'border-0');
+
 //   const cardBody = document.createElement('div');
-//   const cardTitle =  document.createElement('h2');
-//   const listGroup = document.createElement('ul');
-
-//   cardBorder.classList.add('card', 'border-0');
 //   cardBody.classList.add('card-body');
+
+//   const cardTitle = document.createElement('h2');
 //   cardTitle.classList.add('card-title', 'h4');
-//   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+//   cardTitle.textContent = i18nInstance(type);
 
-//   cardBorder.append(cardBody);
 //   cardBody.append(cardTitle);
-
-//   cardTitle.textContent = i18nInstance.t(type);
-
-//   return { cardBorder, listGroup };
-//  }
-
-
-
-const createContainer = (type, watchedState, elements, i18nInstance) => {
-
-  const building = {
-    feeds: (element) => renderFeeds(watchedState, element),
-    posts: (element) => renderPosts(watchedState, element, i18nInstance),
-  };
-  elements[type].innerHtml = '';
-
-  const card = document.createElement('div');
-  card.classList.add('card', 'border-0');
-
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body');
-
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = i18nInstance(type);
-
-  cardBody.append(cardTitle);
-  card.append(cardBody);
-  elements[type](card);
-  building[type](card)
-};
+//   card.append(cardBody);
+//   elements[type](card);
+//   building[type](card)
+// };
 
 const renderModalWindow = (watchedState, postId, elements) => {
   const currentPosts = watchedState.posts.find(({ id }) => id === postId);
@@ -267,73 +299,75 @@ const successStatus = (elements, i18nInstance) => {
 
 const handleError = (elements, error, i18nInstance) => {
   const { feedback, input, submitBtn } = elements;
-  feedback.classList.add('text-danger');
+  input.readOnly = false;
+  submitBtn.disabled = false;
+  feedback.textContent = '';
+  submitBtn.textContent = 'Добавить';
   feedback.classList.remove('text-success');
+  feedback.classList.add('text-danger');
   feedback.textContent = i18nInstance.t(`error.${error.replace(/ /g, '')}`);
 
-  input.classList.toggle('is-invalid', error !== 'Connection Error');
-  input.classList.toggle('is-invalid', error === 'Connection Error');
+  input.classList.add('is-invalid', error !== 'Connection Error');
+  input.classList.add('is-invalid', error === 'Connection Error');
 
-    submitBtn.disabled = false;
-    input.disabled = false;
 };
 
 const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
-  const { submitBtn } = elements;
   switch (fromStatus) {
     case 'success':
     case 'filling':
-       submitBtn.disabled = false;
+      elements.input.readOnly = false;
+      elements.submitBtn.disabled = false;
       successStatus(elements, i18nInstance);
       break;
 
     case 'failed':
-       submitBtn.disabled = false;
+      elements.submitBtn.disabled = false;
       handleError(elements, watchedState.LoadingFeedback.error, i18nInstance, watchedState);
       break;
 
     case 'sending':
-      submitBtn.disabled = true;
+      elements.submitBtn.disabled = true;
       break;
+
 
     default:
       throw new Error(`Uknown fromstatus: ${fromStatus}`);
   }
 };
 
-export default (elements, watchedState, i18nInstance) => (path, value) => {
-  console.log('.........c.',value)
+export default (elements, state, i18nInstance) => onChange(state, (path, value) => {
   switch (path) {
     case 'form.isFeedValid':
-      elements.submitBtn.disabled = true;;
+      elements.submitBtn.disabled = !value;
       break;
 
     case 'LoadingFeedback.formStatus':
-      activeFromStatus(elements, value, watchedState, i18nInstance);
+      activeFromStatus(elements, value, state, i18nInstance);
       break;
 
     case 'LoadingFeedback.error':
-      handleError(elements, value, watchedState, i18nInstance);
+      handleError(elements, value, state, i18nInstance);
       break;
 
     case 'postViewState.currentPostId':
-      renderModalWindow(watchedState, elements, value);
+      renderModalWindow(state, elements, value);
       break;
 
     case 'posts':
     case 'postViewState.visitedPostsId':
-      createContainer('posts', watchedState, elements, i18nInstance);
+      renderPosts('posts', state, elements, i18nInstance);
       break;
 
     case 'feeds':
-      createContainer('feeds', watchedState, elements, i18nInstance);
+      renderFeeds('feeds', state, elements, i18nInstance);
       break;
 
     default:
       break;
 
   }
-};
+});
 // export default (state, elements, i18nInstance) => {
 //   onChange(state, (path, value) => {
 
