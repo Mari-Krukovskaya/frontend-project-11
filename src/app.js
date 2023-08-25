@@ -23,7 +23,6 @@ const buildProxy = (url) => {
   return axios.get(proxy);
 };
 
-
 const extractedPosts = (watchedState, posts, feedId) => {
   const transformedPosts = posts.map((post) => ({
     ...post,
@@ -77,10 +76,10 @@ export default () => {
     feedback: document.querySelector('.feedback'),
     posts: document.querySelector('.posts'),
     feeds: document.querySelector('.feeds'),
-      modalWindow: document.querySelector('.modal'),
-      modalTitle: document.querySelector('.modal-title'),
-      modalBody: document.querySelector('.modal-body'),
-      modalLinkBtn: document.querySelector('.full-article')
+    modalWindow: document.querySelector('.modal'),
+    modalTitle: document.querySelector('.modal-title'),
+    modalBody: document.querySelector('.modal-body'),
+    modalLinkBtn: document.querySelector('.full-article')
   };
   const i18nInstance = i18next.createInstance();
   i18nInstance.init({

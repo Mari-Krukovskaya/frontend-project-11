@@ -146,7 +146,7 @@ export default (watchedState, elements, i18nInstance) => {
   return (path, value) => {
     switch (path) {
       case 'form.isFeedValid':
-       elements.submitBtn.disabled = !value;
+        elements.submitBtn.disabled = !value;
         break;
 
       case 'LoadingFeedback.formStatus':
