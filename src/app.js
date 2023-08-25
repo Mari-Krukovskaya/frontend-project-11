@@ -27,7 +27,7 @@ const extractedPosts = (watchedState, posts, feedId) => {
   const transformedPosts = posts.map((post) => ({
     ...post,
     feedId,
-    id: _.uniqueId()
+    id: _.uniqueId(),
   }));
   watchedState.posts.push(...transformedPosts);
 };
@@ -53,20 +53,20 @@ export default () => {
   const state = {
     form: {
       isFeedValid: true,
-      error: ''
+      error: '',
     },
     LoadingFeedback: {
       formStatus: 'filling',
-      error: ''
+      error: '',
     },
     postViewState: {
       currentPostId: '',
-      visitedPostsId: new Set()
+      visitedPostsId: new Set(),
     },
 
     feeds: [],
     posts: [],
-    validUrl: []
+    validUrl: [],
   };
 
   const elements = {
@@ -79,23 +79,23 @@ export default () => {
     modalWindow: document.querySelector('.modal'),
     modalTitle: document.querySelector('.modal-title'),
     modalBody: document.querySelector('.modal-body'),
-    modalLinkBtn: document.querySelector('.full-article')
+    modalLinkBtn: document.querySelector('.full-article'),
   };
   const i18nInstance = i18next.createInstance();
   i18nInstance.init({
     lng: defaultLanguage,
     debug: true,
-    resources
+    resources,
   })
     .then(() => {
       yup.setLocale({
         mixed: {
           notOneOf: 'rssAlreadyExists',
-          required: 'empty'
+          required: 'empty',
         },
         string: {
-          url: 'invalidUrl'
-        }
+          url: 'invalidUrl',
+        },
       });
       const watchedState = onChange(state, render(state, elements, i18nInstance));
       checkNewPosts(watchedState);
@@ -109,7 +109,7 @@ export default () => {
           .then(() => {
             watchedState.form.isFeedValid = true;
             watchedState.LoadingFeedback.formStatus = 'sending';
-            return buildProxy(url)
+            return buildProxy(url);
           })
           .then((response) => {
             const data = response.data.contents;

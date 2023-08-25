@@ -7,10 +7,10 @@ export default {
       rssAlreadyExists: 'RSS уже существует',
       invalidUrl: 'Ссылка должна быть валидным URL',
       invalidFeed: 'Ресурс не содержит валидный RSS',
-      empty: 'Не должно быть пустым'
+      empty: 'Не должно быть пустым',
     },
     button: 'Просмотр',
     posts: 'Посты',
-    feeds: 'Фиды'
-  }
+    feeds: 'Фиды',
+  },
 };

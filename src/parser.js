@@ -5,21 +5,21 @@ const parseFeedData = (data) => {
   if (parseError) {
     throw new Error('parseError');
   }
-  const feedChannel = xml.querySelector('channel');
-  const feedTitle = feedChannel.querySelector('title').textContent;
-  const feedDescription = feedChannel.querySelector('description').textContent;
-  const feedLink = feedChannel.querySelector('link').textContent;
+
+  const feedTitle = xml.querySelector('channel > title').textContent;
+  const feedDescription = xml.querySelector('channel > description').textContent;
+  const feedLink = xml.querySelector('channel > link').textContent;
 
   const feed = {
     title: feedTitle,
     description: feedDescription,
-    link: feedLink
+    link: feedLink,
   };
-  const items = [...feedChannel.querySelectorAll('item')];
+  const items = [...xml.querySelectorAll('channel > item')];
   const posts = items.map((item) => ({
     title: item.querySelector('title').textContent,
     description: item.querySelector('description').textContent,
-    link: item.querySelector('link').textContent
+    link: item.querySelector('link').textContent,
   }));
 
   return { feed, posts };

@@ -10,7 +10,8 @@ const renderPosts = (watchedState, element, i18nInstance) => {
       'justify-content-between',
       'align-items-start',
       'border-0',
-      'border-end-0');
+      'border-end-0',
+    );
 
     const { title, id, link } = post;
     const a = document.createElement('a');
@@ -51,7 +52,7 @@ const renderFeeds = (watchedState, element) => {
 
     const h3Title = document.createElement('h3');
     h3Title.classList.add('h6', 'm-0');
-    h3Title.textContent = ' ' + title;
+    h3Title.textContent = title;
 
     const p = document.createElement('p');
     p.classList.add('m-0', 'small', 'text-black-50');
@@ -66,9 +67,10 @@ const renderFeeds = (watchedState, element) => {
 const createContainer = (type, watchedState, elements, i18nInstance) => {
   const building = {
     feeds: (element) => renderFeeds(watchedState, element),
-    posts: (element) => renderPosts(watchedState, element, i18nInstance)
+    posts: (element) => renderPosts(watchedState, element, i18nInstance),
   };
-  elements[type].innerHTML = '';
+  const elementsContainer = elements[type];
+  elementsContainer.innerHTML = '';
 
   const cardBorder = document.createElement('div');
   cardBorder.classList.add('card', 'border-0');
@@ -83,17 +85,17 @@ const createContainer = (type, watchedState, elements, i18nInstance) => {
 
   cardBody.append(cardTitle);
   cardBorder.append(cardBody);
-  elements[type].append(cardBorder);
-  building[type](cardBorder)
+  elementsContainer.append(cardBorder);
+  building[type](cardBorder);
 };
 
 const renderModalWindow = (watchedState, elements, postId) => {
   const currentPosts = watchedState.posts.find((post) => post.id === postId);
   const { title, description, link } = currentPosts;
-
-  elements.modalTitle.textContent = title;
-  elements.modalBody.textContent = description;
-  elements.modalLinkBtn.setAttribute('href', link);
+  const { modalTitle, modalBody, modalLinkBtn } = elements;
+  modalTitle.textContent = title;
+  modalBody.textContent = description;
+  modalLinkBtn.setAttribute('href', link);
 };
 
 const successStatus = (elements, i18nInstance) => {
@@ -142,39 +144,38 @@ const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
   }
 };
 
-export default (watchedState, elements, i18nInstance) => {
-  return (path, value) => {
-    switch (path) {
-      case 'form.isFeedValid':
-        elements.submitBtn.disabled = !value;
-        break;
+export default (watchedState, elements, i18nInstance) => (path, value) => {
+  const updatedElements = { ...elements };
+  switch (path) {
+    case 'form.isFeedValid':
+      updatedElements.submitBtn.disabled = !value;
+      break;
 
-      case 'LoadingFeedback.formStatus':
-        activeFromStatus(elements, value, watchedState, i18nInstance);
-        break;
+    case 'LoadingFeedback.formStatus':
+      activeFromStatus(elements, value, watchedState, i18nInstance);
+      break;
 
-      case 'LoadingFeedback.error':
-        handleError(elements, watchedState.LoadingFeedback.error, i18nInstance);
-        break;
+    case 'LoadingFeedback.error':
+      handleError(elements, watchedState.LoadingFeedback.error, i18nInstance);
+      break;
 
-      case 'postViewState.currentPostId':
-        renderModalWindow(watchedState, elements, value);
-        break;
+    case 'postViewState.currentPostId':
+      renderModalWindow(watchedState, elements, value);
+      break;
 
-      case 'postViewState.visitedPostsId':
-        createContainer('posts', watchedState, elements, i18nInstance);
-        break;
+    case 'postViewState.visitedPostsId':
+      createContainer('posts', watchedState, elements, i18nInstance);
+      break;
 
-      case 'posts':
-        createContainer('posts', watchedState, elements, i18nInstance);
-        break;
+    case 'posts':
+      createContainer('posts', watchedState, elements, i18nInstance);
+      break;
 
-      case 'feeds':
-        createContainer('feeds', watchedState, elements, i18nInstance);
-        break;
+    case 'feeds':
+      createContainer('feeds', watchedState, elements, i18nInstance);
+      break;
 
-      default:
-        break;
-    }
-  };
+    default:
+      break;
+  }
 };
