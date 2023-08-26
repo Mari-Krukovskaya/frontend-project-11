@@ -2,7 +2,7 @@ const renderPosts = (watchedState, element, i18nInstance) => {
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
-  watchedState.posts.forEach((post) => {
+  watchedState.posts.forEach(({ title, id, link }) => {
     const listItem = document.createElement('li');
     listItem.classList.add(
       'list-group-item',
@@ -13,18 +13,14 @@ const renderPosts = (watchedState, element, i18nInstance) => {
       'border-end-0',
     );
 
-    const { title, id, link } = post;
     const a = document.createElement('a');
     a.setAttribute('href', link);
     a.dataset.id = id;
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = title;
-    if (watchedState.postViewState.visitedPostsId.has(id)) {
-      a.classList.add('fw-normal');
-    } else {
-      a.classList.add('fw-bold');
-    }
+    const classToAdd = watchedState.postViewState.visitedPostsId.has(id) ? 'fw-normal' : 'fw-bold';
+    a.classList.toggle(classToAdd);
 
     const btn = document.createElement('button');
     btn.setAttribute('type', 'button');
@@ -44,9 +40,7 @@ const renderFeeds = (watchedState, element) => {
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
-  watchedState.feeds.forEach((feed) => {
-    const { title, description } = feed;
-
+  watchedState.feeds.forEach(({ title, description }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
 
@@ -133,7 +127,7 @@ const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
 
     case 'failed':
       submitBtn.disabled = false;
-      handleError(elements, watchedState.LoadingFeedback.error, i18nInstance);
+      handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
       break;
 
     case 'sending':
@@ -151,12 +145,12 @@ export default (watchedState, elements, i18nInstance) => (path, value) => {
       updatedElements.submitBtn.disabled = !value;
       break;
 
-    case 'LoadingFeedback.formStatus':
+    case 'loadingFeedback.formStatus':
       activeFromStatus(elements, value, watchedState, i18nInstance);
       break;
 
-    case 'LoadingFeedback.error':
-      handleError(elements, watchedState.LoadingFeedback.error, i18nInstance);
+    case 'loadingFeedback.error':
+      handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
       break;
 
     case 'postViewState.currentPostId':

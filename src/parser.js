@@ -1,9 +1,12 @@
 const parseFeedData = (data) => {
   const parser = new DOMParser();
-  const xml = parser.parseFromString(data, 'text/xml');
-  const parseError = xml.querySelector('parsereerror');
+  const xml = parser.parseFromString(data, 'application/xml');
+  const parseError = xml.querySelector('parsererror');
+
   if (parseError) {
-    throw new Error('parseError');
+    const error = new Error(parseError.textContent);
+    error.isParsingError = true;
+    throw new Error('invalidFeed');
   }
 
   const feedTitle = xml.querySelector('channel > title').textContent;
@@ -21,7 +24,6 @@ const parseFeedData = (data) => {
     description: item.querySelector('description').textContent,
     link: item.querySelector('link').textContent,
   }));
-
   return { feed, posts };
 };
 
