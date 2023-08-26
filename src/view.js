@@ -108,7 +108,7 @@ const handleError = (elements, error, i18nInstance) => {
   feedback.classList.add('text-danger');
   feedback.classList.remove('text-success');
   feedback.textContent = i18nInstance.t(`error.${error}`);
-  if (error !== 'connectionError') {
+  if (error !== 'connection Error') {
     input.classList.add('is-invalid');
   }
 
