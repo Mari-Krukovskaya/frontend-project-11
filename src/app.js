@@ -122,7 +122,7 @@ export default () => {
           })
           .catch((error) => {
             watchedState.form.isFeedValid = false;
-            watchedState.loadingFeedback.error = error.message ?? ' NetworkError';
+            watchedState.loadingFeedback.error = error && error.message ? error.message : 'defaultError';
             watchedState.loadingFeedback.formStatus = 'failed';
           });
       });
