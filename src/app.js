@@ -17,7 +17,8 @@ const validation = (url, listUrls) => {
 };
 
 const buildProxy = (url) => {
-  const proxy = new URL('https://allorigins.hexlet.app/get');
+  const httpOrigins = 'https://allorigins.hexlet.app/get';
+  const proxy = new URL(httpOrigins);
   proxy.searchParams.set('disableCache', 'true');
   proxy.searchParams.set('url', url);
   return axios.get(proxy);
@@ -51,6 +52,7 @@ const checkNewPosts = (watchedState) => {
 
 export default () => {
   const state = {
+    validUrl: [],
     form: {
       isFeedValid: true,
       error: '',
@@ -63,10 +65,8 @@ export default () => {
       currentPostId: '',
       visitedPostsId: new Set(),
     },
-
     feeds: [],
     posts: [],
-    validUrl: [],
   };
 
   const elements = {
@@ -122,7 +122,7 @@ export default () => {
           })
           .catch((error) => {
             watchedState.form.isFeedValid = false;
-            watchedState.loadingFeedback.error = error.message ?? 'defaultError';
+            watchedState.loadingFeedback.error = error.message ?? ' NetworkError';
             watchedState.loadingFeedback.formStatus = 'failed';
           });
       });

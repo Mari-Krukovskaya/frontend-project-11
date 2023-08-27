@@ -103,8 +103,8 @@ const successStatus = (elements, i18nInstance) => {
 };
 
 const handleError = (elements, error, i18nInstance) => {
+  console.log(error,'/////////')
   const { feedback, input, submitBtn } = elements;
-
   feedback.classList.add('text-danger');
   feedback.classList.remove('text-success');
   feedback.textContent = i18nInstance.t(`error.${error}`);
@@ -117,21 +117,21 @@ const handleError = (elements, error, i18nInstance) => {
 };
 
 const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
-  const { submitBtn } = elements;
+  const updatedElements = { ...elements };
   switch (fromStatus) {
     case 'success':
     case 'filling':
-      submitBtn.disabled = false;
+      updatedElements.disabled = false;
       successStatus(elements, i18nInstance);
       break;
 
     case 'failed':
-      submitBtn.disabled = false;
+      updatedElements.disabled = false;
       handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
       break;
 
     case 'sending':
-      submitBtn.disabled = true;
+      updatedElements.disabled = true;
       break;
     default:
       throw new Error(`Uknown fromStatus: ${fromStatus}`);
