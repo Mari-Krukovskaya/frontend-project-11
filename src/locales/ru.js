@@ -3,7 +3,7 @@ export default {
     success: 'RSS успешно загружен',
     error: {
       defaultError: 'Неверные данные',
-      connectionError: 'Ошибка сети',
+      NetworkError: 'Ошибка сети',
       rssAlreadyExists: 'RSS уже существует',
       invalidUrl: 'Ссылка должна быть валидным URL',
       invalidFeed: 'Ресурс не содержит валидный RSS',

@@ -24,38 +24,11 @@ const buildProxy = (url) => {
   return axios.get(proxy);
 };
 
-const extractedPosts = (watchedState, posts, uniqId) => {
-  const transformedPosts = posts.map((post) => ({
-    ...post,
-    uniqId,
-    id: _.uniqueId(),
-  }));
-  watchedState.posts.push(...transformedPosts);
-};
-
-const checkNewPosts = (watchedState) => {
-  const feedsPromises = watchedState.feeds.map(({ uniqId, link }) => buildProxy(link)
-    .then((response) => {
-      const { posts } = parseFeedData(response.data.contents);
-      const oldPosts = watchedState.posts.map((post) => post.link);
-      const filteredNewPosts = posts.filter((post) => !oldPosts.includes(post.link));
-      if (filteredNewPosts.length > 0) {
-        extractedPosts(watchedState, filteredNewPosts, uniqId);
-      }
-      return Promise.resolve();
-    }));
-  Promise.all(feedsPromises)
-    .finally(() => {
-      setTimeout(() => checkNewPosts(watchedState), timeInterval);
-    });
-};
-
 export default () => {
   const state = {
     validUrl: [],
     form: {
       isFeedValid: true,
-      error: '',
     },
     loadingFeedback: {
       formStatus: 'filling',
@@ -98,34 +71,73 @@ export default () => {
         },
       });
       const watchedState = onChange(state, render(state, elements, i18nInstance));
-      checkNewPosts(watchedState);
-
-      elements.form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const url = formData.get('url');
-
-        validation(url, watchedState.validUrl)
-          .then(() => {
-            watchedState.form.isFeedValid = true;
-            watchedState.loadingFeedback.formStatus = 'sending';
-            return buildProxy(url);
-          })
-          .then((response) => {
-            const data = response.data.contents;
-            watchedState.validUrl.push(url);
-            const { feed, posts } = parseFeedData(data);
-            const uniqId = _.uniqueId();
-            watchedState.feeds.push({ ...feed, id: uniqId, link: url });
-            extractedPosts(watchedState, posts, uniqId);
-            watchedState.loadingFeedback.formStatus = 'success';
-          })
-          .catch((error) => {
-            watchedState.form.isFeedValid = false;
-            watchedState.loadingFeedback.error = error && error.message ? error.message : 'defaultError';
-            watchedState.loadingFeedback.formStatus = 'failed';
+      
+      const handleNewPosts = (watchedState) => {
+        const extractedPosts = (posts, uniqId) => {
+          const transformedPosts = posts.map((post) => ({
+            ...post,
+            uniqId,
+            id: _.uniqueId(),
+          }));
+          watchedState.posts.push(...transformedPosts);
+        };
+      
+        const checkNewPosts = () => {
+          const { feeds, posts } = watchedState;
+          const feedsPromises = feeds.map(({ uniqId, link }) => {
+            return buildProxy(link)
+              .then(({ data: { contents }}) => {
+                const { posts: newPosts } = parseFeedData(contents);
+                const oldPosts = posts.map((post) => post.link);
+                const filteredNewPosts = newPosts.filter((post) => !oldPosts.includes(post.link));
+                if (filteredNewPosts.length > 0) {
+                  extractedPosts(filteredNewPosts, uniqId);
+                }
+              });
           });
-      });
+      
+          Promise.all(feedsPromises)
+            .then(() => {
+              setTimeout(checkNewPosts, timeInterval);
+            })
+            .catch((error) => {
+              console.error('Error checking new posts:', error);
+            });
+        };
+      
+        const handleFormSubmit = (url) => {
+          validation(url, watchedState.validUrl)
+            .then(() => {
+              watchedState.form.isFeedValid = true;
+              watchedState.loadingFeedback.formStatus = 'sending';
+              return buildProxy(url);
+            })
+            .then(({ data: { contents }}) => {
+              watchedState.validUrl.push(url);
+              const { feed, posts } = parseFeedData(contents);
+              const uniqId = _.uniqueId();
+              watchedState.feeds.push({ ...feed, id: uniqId, link: url });
+              extractedPosts(posts, uniqId);
+              watchedState.loadingFeedback.formStatus = 'success';
+            })
+            .catch((error) => {
+              watchedState.form.isFeedValid = false;
+              watchedState.loadingFeedback.error = error.message ?? 'defaultError';
+              watchedState.loadingFeedback.formStatus = 'failed';
+            });
+        };
+      
+        elements.form.addEventListener('submit', function(event) {
+          event.preventDefault();
+          const formData = new FormData(event.target);
+          const url = formData.get('url');
+          handleFormSubmit(url);
+        });
+      
+        checkNewPosts();
+      };
+      
+      handleNewPosts(watchedState, timeInterval);
 
       elements.modalWindow.addEventListener('show.bs.modal', (event) => {
         const id = event.relatedTarget.getAttribute('data-id');
@@ -135,7 +147,7 @@ export default () => {
 
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
-        if (!id) {
+        if (id) {
           watchedState.postViewState.visitedPostsId.add(id);
         }
       });

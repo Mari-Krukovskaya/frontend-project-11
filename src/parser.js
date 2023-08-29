@@ -1,8 +1,7 @@
 const parseFeedData = (data) => {
   const parser = new DOMParser();
-  const xml = parser.parseFromString(data, 'application/xml');
+  const xml = parser.parseFromString(data, 'text/xml');
   const parseError = xml.querySelector('parsererror');
-
   if (parseError) {
     const error = new Error(parseError.textContent);
     error.isParsingError = true;
