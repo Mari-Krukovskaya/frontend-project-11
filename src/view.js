@@ -116,24 +116,24 @@ const handleError = (elements, error, i18nInstance) => {
 };
 
 const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
-const { submitBtn } = elements;
+  const { submitBtn } = elements;
   switch (fromStatus) {
     case 'success':
-    submitBtn.disabled = false;
+      submitBtn.disabled = false;
       successStatus(elements, i18nInstance);
       break;
 
     case 'failed':
-    submitBtn.disabled = false;
+      submitBtn.disabled = false;
       handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
       break;
 
     case 'sending':
-     submitBtn.disabled = true;
+      submitBtn.disabled = true;
       break;
 
     case 'filling':
-     submitBtn.disabled = false;
+      submitBtn.disabled = false;
       break;
 
     default:
@@ -142,9 +142,10 @@ const { submitBtn } = elements;
 };
 
 export default (watchedState, elements, i18nInstance) => (path, value) => {
+  const { submitBtn } = elements;
   switch (path) {
     case 'form.isFeedValid':
-      elements.submitBtn.disabled = !value;
+      submitBtn.disabled = !value;
       break;
 
     case 'loadingFeedback.formStatus':

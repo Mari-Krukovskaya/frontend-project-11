@@ -5,6 +5,7 @@ const parseFeedData = (data) => {
   if (parseError) {
     const error = new Error(parseError.textContent);
     error.isParsingError = true;
+    error.data = data;
     throw new Error('invalidFeed');
   }
 
