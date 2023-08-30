@@ -23,6 +23,7 @@ const buildProxy = (url) => {
   proxy.searchParams.set('url', url);
   return axios.get(proxy);
 };
+
 const extractedPosts = (watchedState, posts, uniqId) => {
   const transformedPosts = posts.map((post) => ({
     ...post,
@@ -35,12 +36,12 @@ const extractedPosts = (watchedState, posts, uniqId) => {
 const checkNewPosts = (watchedState) => {
   const feedsPromises = watchedState.feeds
     .map(({ uniqId, link }) => buildProxy(link)
-      .then((response) => {
-        const { posts: newPosts } = parseFeedData(response.data.contents);
+      .then(({ data }) => {
+        const { posts: newPosts } = parseFeedData(data.contents);
         const oldPosts = watchedState.posts.map((post) => post.link);
-        const filteredNewPosts = newPosts.filter((post) => !oldPosts.includes(post.link));
-        if (filteredNewPosts.length > 0) {
-          extractedPosts(watchedState, filteredNewPosts, uniqId);
+        const everyNewPosts = newPosts.every((post) => !oldPosts.includes(post.link));
+        if (everyNewPosts.length > 0) {
+          extractedPosts(watchedState, everyNewPosts, uniqId);
         }
         return Promise.resolve();
       }));
@@ -110,9 +111,9 @@ export default () => {
             watchedState.loadingFeedback.formStatus = 'sending';
             return buildProxy(url);
           })
-          .then((response) => {
+          .then(({ data }) => {
             watchedState.validUrl.push(url);
-            const { feed, posts } = parseFeedData(response.data.contents);
+            const { feed, posts } = parseFeedData(data.contents);
             const uniqId = _.uniqueId();
             watchedState.feeds.push({ ...feed, id: uniqId, link: url });
             extractedPosts(watchedState, posts, uniqId);
@@ -120,7 +121,11 @@ export default () => {
           })
           .catch((error) => {
             watchedState.form.isFeedValid = false;
-            watchedState.loadingFeedback.error = error.message ?? 'defaultError';
+            if (error.message) {
+              watchedState.loadingFeedback.error = error.message;
+            } else {
+              watchedState.loadingFeedback.error = 'defaultError';
+            }
             watchedState.loadingFeedback.formStatus = 'failed';
           });
       });
