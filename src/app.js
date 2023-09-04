@@ -15,9 +15,9 @@ const defaultLanguage = 'ru';
 const validate = (url, listUrls) => {
   const schema = yup.string().url().required().notOneOf(listUrls);
   return schema
-  .validate(url)
-  .then(() => null)
-  .catch((error) => error.message);
+    .validate(url)
+    .then(() => null)
+    .catch((error) => error.message);
 };
 
 const buildProxy = (url) => {
@@ -27,71 +27,69 @@ const buildProxy = (url) => {
   return proxy.toString();
 };
 
-const linkPosts = (watchedState, posts, uniqId) => {
-  console.log(watchedState, '....')
+const linkPosts = (state, posts, uniqId) => {
   const transformedPosts = posts.map((post) => ({
     ...post,
     uniqId,
     id: _.uniqueId(),
   }));
-  watchedState.posts.push(...transformedPosts);
+  state.posts.push(...transformedPosts);
 };
 
-const loadData = (watchedState, url) => {
-  watchedState.loadingFeedback = { formStatus: 'sending', error: null};
+const loadData = (state, url) => {
+  const newState = { ...state };
+  newState.loadingFeedback = { formStatus: 'sending', error: null };
   return axios({
     method: 'get',
     url: buildProxy(url),
     timeout: timeOut,
   })
-  .then(({ data }) => {
-    const { feed, posts } = parseFeedData(data.contents);
-    const uniqId = _.uniqueId();
-    watchedState.feeds.push({ ...feed, id: uniqId, link: url})
-    linkPosts(watchedState, posts, uniqId);
-    watchedState.loadingFeedback = {
-      error: null,
-      formStatus: 'success',
-    };
-  })
-  .catch((error) => {
-    watchedState.loadingFeedback = 'failed';
-    if (error.isParsingError) {
-      watchedState.loadingFeedback.error = 'invalidFeed';
-    } else if (error.isAxiosError) {
-      watchedState.loadingFeedback.error = 'networkError';
-    } else {
-      watchedState.loadingFeedback.error = 'defaultError';
-    }
-  });
-
+    .then(({ data }) => {
+      const { feed, posts } = parseFeedData(data.contents);
+      const uniqId = _.uniqueId();
+      newState.feeds.push({ ...feed, id: uniqId, link: url });
+      linkPosts(newState, posts, uniqId);
+      newState.loadingFeedback = {
+        error: null,
+        formStatus: 'success',
+      };
+    })
+    .catch((error) => {
+      newState.loadingFeedback.formStatus = 'failed';
+      if (error.isParsingError) {
+        newState.loadingFeedback.error = 'invalidFeed';
+      } else if (error.isAxiosError) {
+        newState.loadingFeedback.error = 'networkError';
+      } else {
+        newState.loadingFeedback.error = 'defaultError';
+      }
+    });
 };
 
-const checkNewPosts = (watchedState, time) => {
-  const feedsPromises = watchedState.feeds.map(({ uniqId, link }) =>
-   axios({
+const checkNewPosts = (state) => {
+  const feedsPromises = state.feeds.map(({ uniqId, link }) => axios({
     method: 'get',
     url: buildProxy(link),
     timeout: timeOut,
-   })
-      .then(({ data }) => {
-        const { posts: newPosts } = parseFeedData(data.contents);
-        const oldPosts = watchedState.posts.map((post) => post.link);
-        const everyNewPosts  = newPosts.every((post) => !oldPosts.includes(post.link)); 
-         if (everyNewPosts) {
-          linkPosts(watchedState, newPosts, uniqId);
-         }
-       return Promise.resolve();
-        }));
-       
+  })
+    .then(({ data }) => {
+      const { posts: newPosts } = parseFeedData(data.contents);
+      const oldPosts = state.posts.map((post) => post.link);
+      const everyNewPosts = newPosts.every((post) => !oldPosts.includes(post.link));
+      if (everyNewPosts) {
+        linkPosts(state, newPosts, uniqId);
+      }
+      return Promise.resolve();
+    }));
+
   return Promise.all(feedsPromises)
     .finally(() => {
-      setTimeout(() => checkNewPosts(watchedState, time), time);
+      setTimeout(() => checkNewPosts(state), timeInterval);
     });
 };
 
 export default () => {
-  const state = {
+  const initState = {
     form: {
       isFeedValid: true,
       error: '',
@@ -128,19 +126,19 @@ export default () => {
   })
     .then(() => {
       yup.setLocale(customMessages);
-      const watchedState = render(state, elements, i18nInstance);
-      
+      const watchedState = render(initState, elements, i18nInstance);
+
       elements.form.addEventListener('submit', (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
         const url = formData.get('url').trim();
-       const feedUrls = watchedState.feeds.map((feed) => feed.url);
+        const feedUrls = watchedState.feeds.map((feed) => feed.url);
 
         validate(url, feedUrls)
           .then((error) => {
             if (error) {
               watchedState.form = {
-                isFeedValid: false, 
+                isFeedValid: false,
                 error: error.message,
               };
               return;
@@ -149,20 +147,18 @@ export default () => {
               isFeedValid: true,
               error: '',
             };
-          loadData(url, watchedState);
+            loadData(url, watchedState);
           });
       });
-  
+
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
         if (!id) {
           return;
         }
-        watchedState.postViewState.currentPostId = id
-          watchedState.postViewState.visitedPostsId.add(id);
-        
+        watchedState.postViewState.currentPostId = id;
+        watchedState.postViewState.visitedPostsId.add(id);
       });
-     checkNewPosts(timeInterval, watchedState);
+      checkNewPosts(watchedState);
     });
 };
-
