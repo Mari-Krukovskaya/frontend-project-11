@@ -1,8 +1,47 @@
-const renderPosts = (watchedState, element, i18nInstance) => {
+import onChange from "on-change";
+
+export default (initialState, elements, i18nInstance) => {
+
+const renderForm = (state) => {
+  const { input, feedback } = elements;
+  const { isFeedValid, error } = state.form;
+  const { fromStatus } = state.loadingFeedback;
+
+  input.classList.toggle('is-invalid', !isFeedValid || fromStatus === 'failed');
+  input.classList.toggle('is-valid', isFeedValid && fromStatus !== 'failed');
+  feedback.classList.toggle('text-danger', !isFeedValid || fromStatus === 'failed');
+  feedback.classList.toggle('text-success', isFeedValid && fromStatus !== 'failed');
+  feedback.textContent = i18nInstance.t(`error.${error}`);
+};
+
+const createContainer = (type) => {
+  const cardBorder = document.createElement('div');
+  cardBorder.classList.add('card', 'border-0');
+
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body');
+  cardBody.textContent = '';
+
+  const cardTitle = document.createElement('h2');
+  cardTitle.classList.add('card-title', 'h4');
+  cardTitle.textContent = i18nInstance.t(type);
+
+  cardBody.append(cardTitle);
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
-  watchedState.posts.forEach(({ title, id, link }) => {
+  return { cardBorder, listGroup };
+};
+
+
+const renderPosts = (state) => {
+  const type = 'posts';
+  const { posts } = elements;
+  posts.innerHTML = '';
+  const { cardBorder, listGroup } = createContainer(type);
+  posts.append(cardBorder);
+
+  state.posts.forEach(({ title, id, link }) => {
     const listItem = document.createElement('li');
     listItem.classList.add(
       'list-group-item',
@@ -19,7 +58,7 @@ const renderPosts = (watchedState, element, i18nInstance) => {
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = title;
-    const classToAdd = watchedState.postViewState.visitedPostsId.has(id) ? 'fw-normal' : 'fw-bold';
+    const classToAdd = state.postViewState.visitedPostsId.has(id) ? 'fw-normal' : 'fw-bold';
     a.classList.toggle(classToAdd);
 
     const btn = document.createElement('button');
@@ -33,14 +72,18 @@ const renderPosts = (watchedState, element, i18nInstance) => {
 
     listGroup.append(listItem);
   });
-  element.append(listGroup);
+  cardBorder.append(listGroup);
 };
 
-const renderFeeds = (watchedState, element) => {
-  const listGroup = document.createElement('ul');
-  listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+const renderFeeds = (state) => {
+  const type = 'feeds';
+  const { feeds } = elements;
+  feeds.innerHTML = '';
 
-  watchedState.feeds.forEach(({ title, description }) => {
+  const { cardBorder, listGroup } = createContainer(type);
+  feeds.append(cardBorder)
+
+  state.feeds.forEach(({ title, description }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
 
@@ -55,36 +98,11 @@ const renderFeeds = (watchedState, element) => {
     listItem.append(h3Title, p);
     listGroup.append(listItem);
   });
-  element.append(listGroup);
+  cardBorder.append(listGroup);
 };
 
-const createContainer = (type, watchedState, elements, i18nInstance) => {
-  const building = {
-    feeds: (element) => renderFeeds(watchedState, element),
-    posts: (element) => renderPosts(watchedState, element, i18nInstance),
-  };
-  const elementsContainer = elements[type];
-  elementsContainer.innerHTML = '';
-
-  const cardBorder = document.createElement('div');
-  cardBorder.classList.add('card', 'border-0');
-
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body');
-  cardBody.textContent = '';
-
-  const cardTitle = document.createElement('h2');
-  cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = i18nInstance.t(type);
-
-  cardBody.append(cardTitle);
-  cardBorder.append(cardBody);
-  elementsContainer.append(cardBorder);
-  building[type](cardBorder);
-};
-
-const renderModalWindow = (watchedState, elements, postId) => {
-  const currentPosts = watchedState.posts.find((post) => post.id === postId);
+const renderModalWindow = (state, postId) => {
+  const currentPosts = state.posts.find((post) => post.id === postId);
   const { title, description, link } = currentPosts;
   const { modalTitle, modalBody, modalLinkBtn } = elements;
   modalTitle.textContent = title;
@@ -92,87 +110,62 @@ const renderModalWindow = (watchedState, elements, postId) => {
   modalLinkBtn.setAttribute('href', link);
 };
 
-const successStatus = (elements, i18nInstance) => {
-  const { feedback, input, form } = elements;
-  feedback.classList.add('text-success');
-  feedback.classList.remove('text-danger');
-  input.classList.remove('is-invalid');
-  feedback.textContent = i18nInstance.t('success');
-  form.reset();
-  input.focus();
-};
-
-const handleError = (elements, error, i18nInstance) => {
-  const { feedback, input, submitBtn } = elements;
-  feedback.classList.add('text-danger');
-  feedback.classList.remove('text-success');
-  feedback.textContent = i18nInstance.t(`error.${error.replace(/ /g, '')}`);
-  if (error !== 'Network Error') {
-    input.classList.add('is-invalid');
-  }
-
-  input.disabled = false;
-  submitBtn.disabled = false;
-};
-
-const activeFromStatus = (elements, fromStatus, watchedState, i18nInstance) => {
-  const { submitBtn } = elements;
-  switch (fromStatus) {
-    case 'success':
-      submitBtn.disabled = false;
-      successStatus(elements, i18nInstance);
-      break;
-
-    case 'failed':
-      submitBtn.disabled = false;
-      handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
-      break;
-
+const activeFromStatus = (state) => {
+  const {form, feedback, input, submitBtn } = elements;
+  const { fromStatus, error } = state.loadingFeedback;
+  switch(fromStatus) {
     case 'sending':
+      feedback.textContent = '';
       submitBtn.disabled = true;
+      input.disabled = true;
       break;
-
-    case 'filling':
+    case 'success':
+      renderForm(state);
+      feedback.classList.replace('text-danger', 'text-success');
+      feedback.textContent = i18nInstance.t('success');
       submitBtn.disabled = false;
+      input.disabled = false;
+      input.focus();
+      form.reset();
       break;
-
+      
+   case 'failed':
+    renderForm(state);
+    feedback.classList.replace('text-success', 'text-danger');
+    feedback.textContent = i18nInstance.t(`error.${error}`);
+    submitBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+    form.reset();
+    break;
     default:
       throw new Error(`Uknown fromStatus: ${fromStatus}`);
   }
 };
 
-export default (watchedState, elements, i18nInstance) => (path, value) => {
-  const { submitBtn } = elements;
+ const state = onChange(initialState, (path) => {
   switch (path) {
-    case 'form.isFeedValid':
-      submitBtn.disabled = !value;
+    case 'form':
+     renderForm(state)
       break;
 
-    case 'loadingFeedback.formStatus':
-      activeFromStatus(elements, value, watchedState, i18nInstance);
-      break;
-
-    case 'loadingFeedback.error':
-      handleError(elements, watchedState.loadingFeedback.error, i18nInstance);
-      break;
-
-    case 'postViewState.currentPostId':
-      renderModalWindow(watchedState, elements, value);
+      case 'loadingFeedback':
+        activeFromStatus(state);
       break;
 
     case 'postViewState.visitedPostsId':
-      createContainer('posts', watchedState, elements, i18nInstance);
-      break;
-
     case 'posts':
-      createContainer('posts', watchedState, elements, i18nInstance);
+      renderPosts(state);
       break;
 
     case 'feeds':
-      createContainer('feeds', watchedState, elements, i18nInstance);
+      renderFeeds(state);
       break;
-
+    case 'postViewState.currentPostId':
+      renderModalWindow(state);
     default:
       break;
   }
+});
+  return state;
 };

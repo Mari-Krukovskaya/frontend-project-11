@@ -3,9 +3,9 @@ const parseFeedData = (data) => {
   const xml = parser.parseFromString(data, 'text/xml');
   const parseError = xml.querySelector('parsererror');
   if (parseError) {
-    const invalidFeed = new Error(parseError.textContent);
-    invalidFeed.isParsingError = true;
-    throw new Error('invalidFeed');
+    const error = new Error(parseError.textContent);
+   error.isPaserError = true;
+    throw error;
   }
 
   const feedTitle = xml.querySelector('channel > title').textContent;
