@@ -8,7 +8,6 @@ import render from './view.js';
 import resources from './locales/index.js';
 import customMessages from './locales/customMessages.js';
 
-const timeOut = 1000;
 const timeInterval = 5000;
 const defaultLanguage = 'ru';
 
@@ -40,8 +39,10 @@ const handlerError = (error) => {
    switch(error.name) {
     case 'AxiosError':
       return 'networkError';
+
     case 'ParserError':
       return 'invalidFeed';
+
       default:
         return 'defaultError';
    };
@@ -52,7 +53,6 @@ const loadData = (watchedState, url) => {
   return axios({
     method: 'get',
     url: buildProxy(url),
-    timeout: timeOut,
   })
     .then((response) => {
       const { data } = response;
@@ -73,11 +73,10 @@ const loadData = (watchedState, url) => {
     });
 };
 
-const checkNewPosts = (watchedState, time) => {
-  const feedsPromises = watchedState.feeds.map(({uniqId, link}) => axios({
+const checkNewPosts = (watchedState) => {
+  const feedsPromises = watchedState.feeds.map(({ uniqId, link }) => axios({
   method: 'get',
   url: buildProxy(link),
-  timeout: timeOut,
   })
     .then((response) => {
       const { data } = response;
@@ -94,7 +93,7 @@ const checkNewPosts = (watchedState, time) => {
   return Promise
   .all(feedsPromises)
   .finally(() => {
-    setTimeout(() => checkNewPosts(watchedState, time), time);
+    setTimeout(() => checkNewPosts(watchedState), timeInterval);
     });
 };
 
