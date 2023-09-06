@@ -1,6 +1,6 @@
 export default {
   translation: {
-    success: 'RSS успешно загружен',
+     success: 'RSS успешно загружен',
     error: {
       defaultError: 'Неверные данные',
       networkError: 'Ошибка сети',

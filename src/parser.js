@@ -4,7 +4,7 @@ const parseFeedData = (data) => {
   const parseError = xml.querySelector('parsererror');
   if (parseError) {
     const error = new Error(parseError.textContent);
-    error.isPaserError = true;
+    error.name = 'ParserError';
     throw error;
   }
 
