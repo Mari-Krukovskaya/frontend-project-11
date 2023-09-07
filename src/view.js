@@ -133,9 +133,7 @@ const activeFromStatus = (value, elements, i18nInstance) => {
     input.disabled = false;
     input.classList.add('is-invalid');
     feedback.classList.replace('text-success', 'text-danger');
-    feedback.textContent = i18nInstance.t(`error.${error.replace(/ /g, '')}`);
-    input.focus();
-    form.reset();
+    feedback.textContent = i18nInstance.t(`error.${error}`);
   } if (formStatus === 'filling') {
     submitBtn.disabled = false;
   }

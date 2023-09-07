@@ -36,6 +36,7 @@ const linkPosts = (watchedState, posts, uniqId) => {
 };
 
 const handlerError = (error) => {
+  console.log(error, 'er')
   switch (error.name) {
     case 'AxiosError':
       return 'networkError';
@@ -49,8 +50,8 @@ const handlerError = (error) => {
 };
 
 const loadData = (watchedState, url) => {
-  const newState = { ...watchedState };
-  newState.loadingFeedback = { formStatus: 'sending', error: '' };
+  // eslint-disable-next-line no-param-reassign
+  watchedState.loadingFeedback = { formStatus: 'sending', error: '' };
   return axios({
     method: 'get',
     url: buildProxy(url),
@@ -58,15 +59,18 @@ const loadData = (watchedState, url) => {
     .then(({ data }) => {
       const { feed, posts } = parseFeedData(data.contents);
       const uniqId = _.uniqueId();
-      newState.feeds.push({ ...feed, id: uniqId, link: url });
-      linkPosts(newState, posts, uniqId);
-      newState.loadingFeedback = {
+      // eslint-disable-next-line no-param-reassign
+      watchedState.feeds.push({ ...feed, id: uniqId, link: url });
+      linkPosts(watchedState, posts, uniqId);
+      // eslint-disable-next-line no-param-reassign
+      watchedState.loadingFeedback = {
         error: '',
         formStatus: 'success',
       };
     })
     .catch((error) => {
-      newState.loadingFeedback = {
+      // eslint-disable-next-line no-param-reassign
+      watchedState.loadingFeedback = {
         error: handlerError(error),
         formStatus: 'failed',
       };
@@ -146,19 +150,18 @@ export default () => {
         const feedUrls = watchedState.feeds.map((feed) => feed.url);
 
         validate(url, feedUrls)
-          .then((error) => {
-            if (error) {
-              watchedState.form = {
-                isFeedValid: false,
-                error: error.message,
-              };
-              return;
-            }
+          .then(() => {
             watchedState.form = {
               isFeedValid: true,
               error: null,
             };
             loadData(watchedState, url);
+          })
+          .catch((error) => {
+            watchedState.form = {
+              isFeedValid: false,
+              error: error.message,
+            };
           });
       });
 
