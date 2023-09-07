@@ -16,7 +16,7 @@ const validate = (url, listUrls) => {
   return schema
     .validate(url)
     .then(() => null)
-    .catch((error) => error);
+    .catch((error) => error.message);
 };
 
 const buildProxy = (url) => {
@@ -36,14 +36,11 @@ const linkPosts = (watchedState, posts, uniqId) => {
 };
 
 const handlerError = (error) => {
-  console.log(error, 'er')
   switch (error.name) {
     case 'AxiosError':
       return 'networkError';
-
     case 'ParserError':
       return 'invalidFeed';
-
     default:
       return 'defaultError';
   }
@@ -59,7 +56,6 @@ const loadData = (watchedState, url) => {
     .then(({ data }) => {
       const { feed, posts } = parseFeedData(data.contents);
       const uniqId = _.uniqueId();
-      // eslint-disable-next-line no-param-reassign
       watchedState.feeds.push({ ...feed, id: uniqId, link: url });
       linkPosts(watchedState, posts, uniqId);
       // eslint-disable-next-line no-param-reassign
@@ -150,18 +146,22 @@ export default () => {
         const feedUrls = watchedState.feeds.map((feed) => feed.url);
 
         validate(url, feedUrls)
-          .then(() => {
+          .then((error) => {
+            if (error) {
+              watchedState.form = {
+                isFeedValid: false,
+                error,
+              };
+              return;
+            }
             watchedState.form = {
               isFeedValid: true,
-              error: null,
+              error: '',
             };
             loadData(watchedState, url);
           })
           .catch((error) => {
-            watchedState.form = {
-              isFeedValid: false,
-              error: error.message,
-            };
+            console.error(error);
           });
       });
 
@@ -173,7 +173,7 @@ export default () => {
 
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
-        if (!id) {
+        if (id) {
           return;
         }
 

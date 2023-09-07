@@ -1,9 +1,11 @@
+import i18next from 'i18next';
+
 export default {
   mixed: {
-    notOneOf: 'rssAlreadyExists',
-    required: 'empty',
+    notOneOf: () => i18next.t('error.rssAlreadyExists'),
+    required: () => i18next.t('error.empty'),
   },
   string: {
-    url: 'invalidUrl',
+    url: () => i18next.t('error.invalidUrl'),
   },
 };

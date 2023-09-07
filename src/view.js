@@ -4,15 +4,10 @@ const renderForm = (value, elements, i18nInstance) => {
   const { isFeedValid, error } = value;
   const { input, feedback } = elements;
 
-  if (isFeedValid === false) {
-    input.classList.add('is-invalid');
-    feedback.classList.remove('text-success');
-    feedback.classList.add('text-danger');
-    feedback.textContent = i18nInstance.t(`error.${error}`);
-  } else {
-    input.classList.remove('is-invalid');
-    feedback.textContent = '';
-  }
+  input.classList.toggle('is-invalid', !isFeedValid);
+  feedback.classList.toggle('text-success', isFeedValid);
+  feedback.classList.toggle('text-danger', !isFeedValid);
+  feedback.textContent = isFeedValid ? '' : i18nInstance.t(`error.${error}`);
 };
 
 const createContainer = (i18nInstance, type) => {
@@ -42,22 +37,21 @@ const renderFeeds = (watchedState, elements, i18nInstance) => {
   const { cardBorder, listGroup } = createContainer(i18nInstance, type);
   feeds.append(cardBorder);
 
-  watchedState.feeds.forEach((feed) => {
-    const { title, description } = feed;
+  watchedState.feeds.forEach(({ title, description }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
 
     const h3Title = document.createElement('h3');
     h3Title.classList.add('h6', 'm-0');
     h3Title.textContent = title;
-    listItem.prepend(h3Title);
+    listItem.append(h3Title);
 
     const p = document.createElement('p');
     p.classList.add('m-0', 'small', 'text-black-50');
     p.textContent = description;
     listItem.append(p);
 
-    listGroup.prepend(listItem);
+    listGroup.append(listItem);
   });
   cardBorder.append(listGroup);
 };
@@ -70,8 +64,7 @@ const renderPosts = (watchedState, elements, i18nInstance) => {
   const { cardBorder, listGroup } = createContainer(i18nInstance, type);
   posts.append(cardBorder);
 
-  watchedState.posts.forEach((post) => {
-    const { title, id, link } = post;
+  watchedState.posts.forEach(({ title, id, link }) => {
     const listItem = document.createElement('li');
     listItem.classList.add(
       'list-group-item',
@@ -114,38 +107,47 @@ const activeFromStatus = (value, elements, i18nInstance) => {
     submitBtn,
   } = elements;
 
-  if (formStatus === 'success') {
-    submitBtn.disabled = false;
-    input.disabled = false;
-    feedback.classList.replace('text-danger', 'text-success');
-    feedback.textContent = i18nInstance.t('success');
-    form.reset();
-    input.focus();
-  }
-  if (formStatus === 'sending') {
-    submitBtn.disabled = true;
-    input.disabled = true;
-    input.classList.remove('is-invalid');
-    feedback.classList.replace('text-danger', 'text-success');
-  }
-  if (formStatus === 'failed') {
-    submitBtn.disabled = false;
-    input.disabled = false;
-    input.classList.add('is-invalid');
-    feedback.classList.replace('text-success', 'text-danger');
-    feedback.textContent = i18nInstance.t(`error.${error}`);
-  } if (formStatus === 'filling') {
-    submitBtn.disabled = false;
+  submitBtn.disabled = false;
+  input.disabled = false;
+  input.classList.remove('is-invalid');
+  feedback.classList.remove('text-danger', 'text-success');
+
+  switch (formStatus) {
+    case 'success':
+      feedback.classList.add('text-success');
+      feedback.textContent = i18nInstance.t('success');
+      form.reset();
+      input.focus();
+      break;
+
+    case 'sending':
+      submitBtn.disabled = true;
+      feedback.classList.add('text-success');
+      break;
+
+    case 'failed':
+      input.classList.add('is-invalid');
+      feedback.classList.add('text-danger');
+      feedback.textContent = i18nInstance.t(`error.${error}`);
+      input.focus();
+      form.reset();
+      break;
+
+    case 'filling':
+      break;
+
+    default:
+      throw new Error(`Unknown form status: ${formStatus}`);
   }
 };
+
 const renderModalWindow = (watchedState, elements) => {
   const { modalTitle, modalBody, modalLinkBtn } = elements;
   const { currentPostId } = watchedState.postViewState;
-  const currentPost = watchedState.posts.find((post) => post.id === currentPostId);
-  const { title, description, link } = currentPost;
+  const { title, description, link } = watchedState.posts.find((post) => post.id === currentPostId);
   modalTitle.textContent = title;
   modalBody.textContent = description;
-  modalLinkBtn.setAttribute('href', link);
+  modalLinkBtn.href = link;
 };
 
 export default (state, elements, i18nInstance) => onChange(state, (path, value) => {
@@ -159,9 +161,6 @@ export default (state, elements, i18nInstance) => onChange(state, (path, value) 
       break;
 
     case 'postViewState.visitedPostsId':
-      renderPosts(state, elements, i18nInstance);
-      break;
-
     case 'posts':
       renderPosts(state, elements, i18nInstance);
       break;
