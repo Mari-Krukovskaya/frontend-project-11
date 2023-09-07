@@ -3,7 +3,7 @@ const parseFeedData = (data) => {
   const xml = parser.parseFromString(data, 'text/xml');
   const parseError = xml.querySelector('parsererror');
   if (parseError) {
-    const error = new Error(parseError.textContent);
+    const error =  new Error(parseError.textContent);
     error.name = 'ParserError';
     throw error;
   }

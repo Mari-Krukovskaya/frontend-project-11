@@ -21,7 +21,7 @@ const validate = (url, listUrls) => {
 
 const buildProxy = (url) => {
   const proxy = new URL('/get', 'https://allorigins.hexlet.app');
-  proxy.searchParams.set('disableCache', 'true');
+  proxy.searchParams.set('disableCache', true);
   proxy.searchParams.set('url', url);
   return proxy.toString();
 };
@@ -36,50 +36,50 @@ const linkPosts = (watchedState, posts, uniqId) => {
 };
 
 const handlerError = (error) => {
-   switch(error.name) {
+  switch (error.name) {
     case 'AxiosError':
       return 'networkError';
 
     case 'ParserError':
       return 'invalidFeed';
 
-      default:
-        return 'defaultError';
-   };
+    default:
+      return 'defaultError';
+  }
 };
 
 const loadData = (watchedState, url) => {
-  watchedState.loadingFeedback = { formStatus: 'sending', error: null };
+  const newState = { ...watchedState }
+  newState.loadingFeedback = { formStatus: 'sending', error: '' };
   return axios({
     method: 'get',
     url: buildProxy(url),
   })
-    .then((response) => {
-      const { data } = response;
+    .then(({ data }) => {
       const { feed, posts } = parseFeedData(data.contents);
       const uniqId = _.uniqueId();
-      watchedState.feeds.push({ ...feed, id: uniqId, link: url });
-      linkPosts(watchedState, posts, uniqId);
-      watchedState.loadingFeedback = {
-        error: null,
+      newState.feeds.push({ ...feed, id: uniqId, link: url });
+      linkPosts(newState, posts, uniqId);
+      newState.loadingFeedback = {
+        error: '',
         formStatus: 'success',
       };
     })
     .catch((error) => {
-      watchedState.loadingFeedback = {
-         error: handlerError(error), 
-         formStatus: 'failed',
-        };
+      newState.loadingFeedback = {
+        error: handlerError(error),
+        formStatus: 'failed',
+      };
+      return Promise.reject(error)
     });
 };
 
 const checkNewPosts = (watchedState) => {
   const feedsPromises = watchedState.feeds.map(({ uniqId, link }) => axios({
-  method: 'get',
-  url: buildProxy(link),
+    method: 'get',
+    url: buildProxy(link),
   })
-    .then((response) => {
-      const { data } = response;
+    .then(({ data }) => {
       const { posts: newPosts } = parseFeedData(data.contents);
       const oldPosts = watchedState.posts.map((post) => post.link);
       const everyNewPosts = newPosts.filter((post) => !oldPosts.includes(post.link));
@@ -89,11 +89,11 @@ const checkNewPosts = (watchedState) => {
       }
       return Promise.resolve();
     }));
- 
+
   return Promise
-  .all(feedsPromises)
-  .finally(() => {
-    setTimeout(() => checkNewPosts(watchedState), timeInterval);
+    .all(feedsPromises)
+    .finally(() => {
+      setTimeout(() => checkNewPosts(watchedState, timeInterval), timeInterval);
     });
 };
 
@@ -107,38 +107,38 @@ export default () => {
     .then(() => {
       yup.setLocale(customMessages);
 
-  const initState = {
-    form: {
-      isFeedValid: true,
-      error: '',
-    },
-    loadingFeedback: {
-      formStatus: 'filling',
-      error: '',
-    },
-    postViewState: {
-      currentPostId: '',
-      visitedPostsId: new Set(),
-    },
-    feeds: [],
-    posts: [],
-  };
+      const initState = {
+        form: {
+          isFeedValid: true,
+          error: '',
+        },
+        loadingFeedback: {
+          formStatus: 'filling',
+          error: '',
+        },
+        postViewState: {
+          currentPostId: '',
+          visitedPostsId: new Set(),
+        },
+        feeds: [],
+        posts: [],
+      };
 
-  const elements = {
-    form: document.querySelector('.rss-form'),
-    input: document.querySelector('.form-control'),
-    submitBtn: document.querySelector('button[type="submit"]'),
-    feedback: document.querySelector('.feedback'),
-    posts: document.querySelector('.posts'),
-    feeds: document.querySelector('.feeds'),
-    modalWindow: document.querySelector('.modal'),
-    modalTitle: document.querySelector('.modal-title'),
-    modalBody: document.querySelector('.modal-body'),
-    modalLinkBtn: document.querySelector('.full-article'),
-  };
-  
+      const elements = {
+        form: document.querySelector('.rss-form'),
+        input: document.querySelector('.form-control'),
+        submitBtn: document.querySelector('button[type="submit"]'),
+        feedback: document.querySelector('.feedback'),
+        posts: document.querySelector('.posts'),
+        feeds: document.querySelector('.feeds'),
+        modalWindow: document.querySelector('.modal'),
+        modalTitle: document.querySelector('.modal-title'),
+        modalBody: document.querySelector('.modal-body'),
+        modalLinkBtn: document.querySelector('.full-article'),
+      };
+
       const watchedState = render(initState, elements, i18nInstance);
-    
+
       elements.form.addEventListener('submit', (event) => {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -166,16 +166,16 @@ export default () => {
         const id = event.relatedTarget.getAttribute('data-id');
         watchedState.postViewState.visitedPostsId.add(id);
         watchedState.postViewState.currentPostId = id;
-        });
+      });
 
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
         if (!id) {
           return;
         }
-        
+
         watchedState.postViewState.visitedPostsId.add(id);
       });
-   checkNewPosts(watchedState, timeInterval) ;
+      checkNewPosts(watchedState);
     });
 };
