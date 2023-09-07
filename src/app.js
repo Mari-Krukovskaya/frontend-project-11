@@ -49,7 +49,7 @@ const handlerError = (error) => {
 };
 
 const loadData = (watchedState, url) => {
-  const newState = { ...watchedState }
+  const newState = { ...watchedState };
   newState.loadingFeedback = { formStatus: 'sending', error: '' };
   return axios({
     method: 'get',
@@ -70,7 +70,7 @@ const loadData = (watchedState, url) => {
         error: handlerError(error),
         formStatus: 'failed',
       };
-      return Promise.reject(error)
+      return Promise.reject(error);
     });
 };
 

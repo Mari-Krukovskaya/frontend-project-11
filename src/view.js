@@ -21,7 +21,7 @@ const createContainer = (i18nInstance, type) => {
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
-  cardBorder.append(cardBody)
+  cardBorder.append(cardBody);
 
   const cardTitle = document.createElement('h2');
   cardTitle.classList.add('card-title', 'h4');
@@ -106,7 +106,7 @@ const renderPosts = (watchedState, elements, i18nInstance) => {
 };
 
 const activeFromStatus = (value, elements, i18nInstance) => {
-  const { fromStatus, error } = value;
+  const { formStatus, error } = value;
   const {
     form,
     feedback,
@@ -114,7 +114,7 @@ const activeFromStatus = (value, elements, i18nInstance) => {
     submitBtn,
   } = elements;
 
-  if (fromStatus === 'success') {
+  if (formStatus === 'success') {
     submitBtn.disabled = false;
     input.disabled = false;
     feedback.classList.replace('text-danger', 'text-success');
@@ -122,23 +122,21 @@ const activeFromStatus = (value, elements, i18nInstance) => {
     form.reset();
     input.focus();
   }
-  if (fromStatus === 'sending') {
+  if (formStatus === 'sending') {
     submitBtn.disabled = true;
     input.disabled = true;
     input.classList.remove('is-invalid');
     feedback.classList.replace('text-danger', 'text-success');
-
   }
-  if (fromStatus === 'failed') {
+  if (formStatus === 'failed') {
     submitBtn.disabled = false;
     input.disabled = false;
-    input.classList.add('is-invalid')
+    input.classList.add('is-invalid');
     feedback.classList.replace('text-success', 'text-danger');
     feedback.textContent = i18nInstance.t(`error.${error.replace(/ /g, '')}`);
     input.focus();
     form.reset();
-
-  } if (fromStatus === 'filling') {
+  } if (formStatus === 'filling') {
     submitBtn.disabled = false;
   }
 };
