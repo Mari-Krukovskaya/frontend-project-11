@@ -8,6 +8,7 @@ import render from './view.js';
 import resources from './locales/index.js';
 import customMessages from './locales/customMessages.js';
 
+const time = 10000;
 const timeInterval = 5000;
 const defaultLanguage = 'ru';
 
@@ -52,9 +53,10 @@ const loadData = (watchedState, url) => {
   return axios({
     method: 'get',
     url: buildProxy(url),
+    timeout: time,
   })
-    .then(({ data }) => {
-      const { feed, posts } = parseFeedData(data.contents);
+    .then((response) => {
+      const { feed, posts } = parseFeedData(response.data.contents);
       const uniqId = _.uniqueId();
       watchedState.feeds.push({ ...feed, id: uniqId, link: url });
       linkPosts(watchedState, posts, uniqId);
@@ -77,14 +79,15 @@ const checkNewPosts = (watchedState) => {
   const feedsPromises = watchedState.feeds.map(({ uniqId, link }) => axios({
     method: 'get',
     url: buildProxy(link),
+    timeout: time,
   })
-    .then(({ data }) => {
-      const { posts: newPosts } = parseFeedData(data.contents);
+    .then((response) => {
+      const { posts } = parseFeedData(response.data.contents);
       const oldPosts = watchedState.posts.map((post) => post.link);
-      const everyNewPosts = newPosts.filter((post) => !oldPosts.includes(post.link));
+      const everyNewPosts = posts.filter((post) => !oldPosts.includes(post.link));
 
       if (everyNewPosts.length > 0) {
-        linkPosts(watchedState, newPosts, uniqId);
+        linkPosts(watchedState, everyNewPosts, uniqId);
       }
       return Promise.resolve();
     }));
@@ -92,7 +95,7 @@ const checkNewPosts = (watchedState) => {
   return Promise
     .all(feedsPromises)
     .finally(() => {
-      setTimeout(() => checkNewPosts(watchedState, timeInterval), timeInterval);
+      setTimeout(() => checkNewPosts(watchedState), timeInterval);
     });
 };
 
@@ -125,7 +128,7 @@ export default () => {
 
       const elements = {
         form: document.querySelector('.rss-form'),
-        input: document.querySelector('.form-control'),
+        input: document.querySelector('input[name="url"]'),
         submitBtn: document.querySelector('button[type="submit"]'),
         feedback: document.querySelector('.feedback'),
         posts: document.querySelector('.posts'),
@@ -142,8 +145,7 @@ export default () => {
         event.preventDefault();
         const formData = new FormData(event.target);
         const url = formData.get('url').trim();
-        const feedUrls = watchedState.feeds.map((feed) => feed.url);
-
+        const feedUrls = watchedState.feeds.map((feed) => feed.link);
         validate(url, feedUrls)
           .then((error) => {
             if (error) {

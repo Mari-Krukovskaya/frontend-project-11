@@ -16,7 +16,7 @@ const createContainer = (i18nInstance, type) => {
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
-  cardBorder.append(cardBody);
+  cardBorder.prepend(cardBody);
 
   const cardTitle = document.createElement('h2');
   cardTitle.classList.add('card-title', 'h4');
@@ -153,7 +153,6 @@ export default (state, elements, i18nInstance) => onChange(state, (path, value) 
     case 'form':
       renderForm(value, elements, i18nInstance);
       break;
-
     case 'loadingFeedback':
       activeFromStatus(value, elements, i18nInstance);
       break;

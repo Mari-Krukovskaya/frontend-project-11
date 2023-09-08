@@ -1,6 +1,6 @@
 export default {
   mixed: {
-    notOneOf: 'rssAlreadyExists',
+    notOneOf: 'alreadyExists',
     required: 'empty',
   },
   string: {

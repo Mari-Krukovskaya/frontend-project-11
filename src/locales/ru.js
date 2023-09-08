@@ -4,7 +4,7 @@ export default {
     error: {
       defaultError: 'Неверные данные',
       networkError: 'Ошибка сети',
-      rssAlreadyExists: 'RSS уже существует',
+      alreadyExists: 'RSS уже существует',
       invalidUrl: 'Ссылка должна быть валидным URL',
       invalidFeed: 'Ресурс не содержит валидный RSS',
       empty: 'Не должно быть пустым',
