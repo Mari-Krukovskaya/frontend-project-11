@@ -21,7 +21,7 @@ const validate = (url, listUrls) => {
 
 const buildProxy = (url) => {
   const proxy = new URL('/get', 'https://allorigins.hexlet.app');
-  proxy.searchParams.set('disableCache', true);
+  proxy.searchParams.set('disableCache', 'true');
   proxy.searchParams.set('url', url);
   return proxy.toString();
 };
@@ -70,7 +70,6 @@ const loadData = (watchedState, url) => {
         error: handlerError(error),
         formStatus: 'failed',
       };
-      return Promise.reject(error);
     });
 };
 
@@ -173,7 +172,7 @@ export default () => {
 
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
-        if (id) {
+        if (!id) {
           return;
         }
 

@@ -129,8 +129,6 @@ const activeFromStatus = (value, elements, i18nInstance) => {
       input.classList.add('is-invalid');
       feedback.classList.add('text-danger');
       feedback.textContent = i18nInstance.t(`error.${error}`);
-      input.focus();
-      form.reset();
       break;
 
     case 'filling':
