@@ -10,59 +10,59 @@ const renderForm = (value, elements, i18nInstance) => {
   feedback.textContent = isFeedValid ? '' : i18nInstance.t(`error.${error}`);
 };
 
-const createContainer = (i18nInstance, type) => {
-  const cardBorder = document.createElement('div');
-  cardBorder.classList.add('card', 'border-0');
+const createContainer = (i18nInstance, containerType) => {
+  const cardContainer = document.createElement('div');
+  cardContainer.classList.add('card', 'border-0');
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
-  cardBorder.prepend(cardBody);
+  cardContainer.prepend(cardBody);
 
   const cardTitle = document.createElement('h2');
   cardTitle.classList.add('card-title', 'h4');
-  cardTitle.textContent = i18nInstance.t(type);
-  cardBorder.append(cardTitle);
+  cardTitle.textContent = i18nInstance.t(containerType);
+  cardContainer.append(cardTitle);
 
   const listGroup = document.createElement('ul');
   listGroup.classList.add('list-group', 'border-0', 'rounded-0');
 
-  return { cardBorder, listGroup };
+  return { cardContainer, listGroup };
 };
 
 const renderFeeds = (watchedState, elements, i18nInstance) => {
-  const type = 'feeds';
+  const containerType = 'feeds';
   const { feeds } = elements;
   feeds.textContent = '';
 
-  const { cardBorder, listGroup } = createContainer(i18nInstance, type);
-  feeds.append(cardBorder);
+  const { cardContainer, listGroup } = createContainer(i18nInstance, containerType);
+  feeds.append(cardContainer);
 
   watchedState.feeds.forEach(({ title, description }) => {
     const listItem = document.createElement('li');
     listItem.classList.add('list-group-item', 'border-0', 'border-end-0');
 
-    const h3Title = document.createElement('h3');
-    h3Title.classList.add('h6', 'm-0');
-    h3Title.textContent = title;
-    listItem.append(h3Title);
+    const titleElement = document.createElement('h3');
+    titleElement.classList.add('h6', 'm-0');
+    titleElement.textContent = title;
+    listItem.append(titleElement);
 
-    const p = document.createElement('p');
-    p.classList.add('m-0', 'small', 'text-black-50');
-    p.textContent = description;
-    listItem.append(p);
+    const descriptionElement = document.createElement('p');
+    descriptionElement.classList.add('m-0', 'small', 'text-black-50');
+    descriptionElement.textContent = description;
+    listItem.append(descriptionElement);
 
     listGroup.append(listItem);
   });
-  cardBorder.append(listGroup);
+  cardContainer.append(listGroup);
 };
 
 const renderPosts = (watchedState, elements, i18nInstance) => {
-  const type = 'posts';
+  const containerType = 'posts';
   const { posts } = elements;
   posts.textContent = '';
 
-  const { cardBorder, listGroup } = createContainer(i18nInstance, type);
-  posts.append(cardBorder);
+  const { cardContainer, listGroup } = createContainer(i18nInstance, containerType);
+  posts.append(cardContainer);
 
   watchedState.posts.forEach(({ title, id, link }) => {
     const listItem = document.createElement('li');
@@ -75,27 +75,26 @@ const renderPosts = (watchedState, elements, i18nInstance) => {
       'border-end-0',
     );
 
-    const a = document.createElement('a');
-    a.setAttribute('href', link);
-    a.dataset.id = id;
-    a.setAttribute('target', '_blank');
-    a.setAttribute('rel', 'noopener noreferrer');
-    a.textContent = title;
-    const classToAdd = watchedState.postViewState.visitedPostsId.has(id) ? 'fw-normal' : 'fw-bold';
-    a.classList.toggle(classToAdd);
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', link);
+    linkElement.dataset.id = id;
+    linkElement.setAttribute('target', '_blank');
+    linkElement.setAttribute('rel', 'noopener noreferrer');
+    linkElement.textContent = title;
+    const titleClass = watchedState.postViewState.visitedPostsId.has(id) ? 'fw-normal' : 'fw-bold';
+    linkElement.classList.toggle(titleClass);
 
-    const btn = document.createElement('button');
-    btn.setAttribute('type', 'button');
-    btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    btn.dataset.id = id;
-    btn.dataset.bsToggle = 'modal';
-    btn.dataset.bsTarget = '#modal';
-    btn.textContent = i18nInstance.t('button');
-    listItem.append(a, btn);
+    const previewButton = document.createElement('button');
+    previewButton.setAttribute('type', 'button');
+    previewButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    previewButton.dataset.id = id;
+    previewButton.dataset.bsToggle = 'modal';
+    previewButton.dataset.bsTarget = '#modal';
+    previewButton.textContent = i18nInstance.t('button');
+    listItem.append(linkElement, previewButton);
     listGroup.append(listItem);
   });
-
-  cardBorder.append(listGroup);
+  cardContainer.append(listGroup);
 };
 
 const activeFromStatus = (value, elements, i18nInstance) => {

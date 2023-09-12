@@ -8,7 +8,7 @@ import watcher from './view.js';
 import resources from './locales/index.js';
 import customMessages from './locales/customMessages.js';
 
-const time = 10000;
+const timeOut = 10000;
 const timeInterval = 5000;
 const defaultLanguage = 'ru';
 
@@ -27,15 +27,6 @@ const buildProxy = (url) => {
   return proxy.toString();
 };
 
-const linkPosts = (watchedState, posts, uniqId) => {
-  const transformedPosts = posts.map((post) => ({
-    ...post,
-    uniqId,
-    id: _.uniqueId(),
-  }));
-  watchedState.posts.push(...transformedPosts);
-};
-
 const handlerError = (error) => {
   switch (error.name) {
     case 'AxiosError':
@@ -47,19 +38,26 @@ const handlerError = (error) => {
   }
 };
 
+const createLinkedPost = (feedId) => (post) => ({
+  ...post,
+  feedId,
+  id: _.uniqueId(),
+});
+
 const loadData = (watchedState, url) => {
   // eslint-disable-next-line no-param-reassign
   watchedState.loadingFeedback = { formStatus: 'sending', error: '' };
   return axios({
     method: 'get',
     url: buildProxy(url),
-    timeout: time,
+    timeout: timeOut,
   })
     .then((response) => {
       const { feed, posts } = parseFeedData(response.data.contents);
-      const uniqId = _.uniqueId();
-      watchedState.feeds.push({ ...feed, id: uniqId, link: url });
-      linkPosts(watchedState, posts, uniqId);
+      const feedId = _.uniqueId();
+      watchedState.feeds.push({ ...feed, id: feedId, link: url });
+      const linkedPosts = posts.map(createLinkedPost(feedId));
+      watchedState.posts.push(...linkedPosts);
       // eslint-disable-next-line no-param-reassign
       watchedState.loadingFeedback = {
         error: '',
@@ -76,18 +74,19 @@ const loadData = (watchedState, url) => {
 };
 
 const checkNewPosts = (watchedState) => {
-  const feedsPromises = watchedState.feeds.map(({ uniqId, link }) => axios({
+  const feedsPromises = watchedState.feeds.map(({ feedId, link }) => axios({
     method: 'get',
     url: buildProxy(link),
-    timeout: time,
+    timeout: timeOut,
   })
     .then((response) => {
       const { posts } = parseFeedData(response.data.contents);
       const oldPosts = watchedState.posts.map((post) => post.link);
-      const everyNewPosts = posts.filter((post) => !oldPosts.includes(post.link));
+      const newPosts = posts.filter((post) => !oldPosts.includes(post.link));
 
-      if (everyNewPosts.length > 0) {
-        linkPosts(watchedState, everyNewPosts, uniqId);
+      if (newPosts.length > 0) {
+        const linkedNewPosts = newPosts.map(createLinkedPost(feedId));
+        watchedState.posts.push(...linkedNewPosts);
       }
       return Promise.resolve();
     }));
@@ -166,18 +165,12 @@ export default () => {
           });
       });
 
-      elements.modalWindow.addEventListener('show.bs.modal', (event) => {
-        const id = event.relatedTarget.getAttribute('data-id');
-        watchedState.postViewState.visitedPostsId.add(id);
-        watchedState.postViewState.currentPostId = id;
-      });
-
       elements.posts.addEventListener('click', (event) => {
         const { id } = event.target.dataset;
         if (!id) {
           return;
         }
-
+        watchedState.postViewState.currentPostId = id;
         watchedState.postViewState.visitedPostsId.add(id);
       });
       checkNewPosts(watchedState);
