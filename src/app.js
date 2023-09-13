@@ -4,7 +4,7 @@ import axios from 'axios';
 import _ from 'lodash';
 
 import parseFeedData from './parser.js';
-import watcher from './view.js';
+import watch from './view.js';
 import resources from './locales/index.js';
 import customMessages from './locales/customMessages.js';
 
@@ -138,7 +138,7 @@ export default () => {
         modalLinkBtn: document.querySelector('.full-article'),
       };
 
-      const watchedState = watcher(initState, elements, i18nInstance);
+      const watchedState = watch(initState, elements, i18nInstance);
 
       elements.form.addEventListener('submit', (event) => {
         event.preventDefault();
